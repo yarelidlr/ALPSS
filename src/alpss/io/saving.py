@@ -1,7 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
-from IPython.display import display
+try:
+    from IPython.display import display
+except ImportError:
+    from pprint import pprint as display
 from importlib.metadata import version, PackageNotFoundError
 import random
 import string

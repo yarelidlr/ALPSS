@@ -1,6 +1,6 @@
 from scipy.fft import fft
 from scipy.fft import ifft
-from scipy.fftpack import fftshift
+from numpy.fft import fftshift
 from alpss.velocity.derivative import *
 from alpss.velocity.smoothing import *
 

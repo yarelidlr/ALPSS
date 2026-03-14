@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.fft import fft, ifft, fftfreq
-from scipy.fftpack import fftshift
+from numpy.fft import fftshift
 from alpss.utils import stft
 from scipy.optimize import curve_fit
 
