@@ -31,18 +31,46 @@ def spall_analysis(vc_out, iua_out, **inputs):
         # attempt to get the fist local minimum after the peak velocity to get the pullback
         # velocity. 'order' is the number of points on each side to compare to.
         try:
-            # get all the indices for relative minima in the domain, order them, and take the first one that occurs
-            # after the peak velocity
-            rel_min_idx = signal.argrelmin(velocity_f_smooth, order=pb_neighbors)[0]
-            extrema_min = np.append(rel_min_idx, np.argmax(velocity_f_smooth))
-            extrema_min.sort()
-            max_ten_idx = extrema_min[
-                np.where(extrema_min == np.argmax(velocity_f_smooth))[0][0]
-                + 1
-                + pb_idx_correction
-            ]
+            # --- Pullback (max tension) detection with physical constraints ---
+            # The pullback velocity must be:
+            #   1. After the peak velocity in time
+            #   2. Positive (free surface cannot reverse through zero)
+            #   3. Less than the peak velocity (energy conservation)
+            # We search within a bounded time window after the peak.
+            max_pullback_time = inputs.get("max_pullback_time", 100e-9)  # configurable, default 100 ns
+            max_pullback_idx = np.searchsorted(
+                time_f, time_f[peak_velocity_idx] + max_pullback_time, side="right"
+            )
+            max_pullback_idx = min(max_pullback_idx, len(time_f))
 
-            # get the uncertainities associated with the max tension velocity
+            # Search for relative minima only in the post-peak window
+            search_slice = velocity_f_smooth[peak_velocity_idx:max_pullback_idx]
+            if len(search_slice) < 2 * pb_neighbors + 1:
+                raise ValueError(
+                    f"Post-peak search window too short ({len(search_slice)} points) "
+                    f"for pb_neighbors={pb_neighbors}. Increase max_pullback_time or decrease pb_neighbors."
+                )
+
+            rel_min_local = signal.argrelmin(search_slice, order=pb_neighbors)[0]
+
+            # Filter: must be positive and less than peak velocity
+            valid_mask = (
+                (search_slice[rel_min_local] > 0) &
+                (search_slice[rel_min_local] < peak_velocity)
+            )
+            valid_minima = rel_min_local[valid_mask]
+
+            if len(valid_minima) == 0:
+                raise ValueError(
+                    "No physically valid pullback minimum found (positive velocity, below peak) "
+                    f"within {max_pullback_time/1e-9:.0f} ns after peak compression."
+                )
+
+            # Take the first valid minimum (closest to peak), apply user correction
+            selected_local_idx = valid_minima[0 + pb_idx_correction]
+            max_ten_idx = peak_velocity_idx + selected_local_idx
+
+            # get the uncertainties associated with the max tension velocity
             max_ten_freq_uncert = freq_uncert[max_ten_idx]
             max_ten_vel_uncert = vel_uncert[max_ten_idx]
 
@@ -56,12 +84,21 @@ def spall_analysis(vc_out, iua_out, **inputs):
             strain_rate_est = (
                 (0.5 / C0)
                 * pullback_velocity
-                / (time_f[max_ten_idx] - time_f[np.argmax(velocity_f_smooth)])
+                / (time_f[max_ten_idx] - time_f[peak_velocity_idx])
             )
             spall_strength_est = 0.5 * density * C0 * pullback_velocity
 
+            # Plausibility warning (not an error — exotic materials may exceed this)
+            max_plausible_spall_gpa = inputs.get("max_plausible_spall_gpa", 20.0)
+            if spall_strength_est / 1e9 > max_plausible_spall_gpa:
+                logging.warning(
+                    "Spall strength %.2f GPa exceeds plausibility threshold %.1f GPa. "
+                    "Check signal quality and pullback detection.",
+                    spall_strength_est / 1e9, max_plausible_spall_gpa,
+                )
+
             # set final variables for the function return
-            t_max_comp = time_f[np.argmax(velocity_f_smooth)]
+            t_max_comp = time_f[peak_velocity_idx]
             t_max_ten = time_f[max_ten_idx]
             v_max_comp = peak_velocity
             v_max_ten = max_tension_velocity
@@ -82,15 +119,18 @@ def spall_analysis(vc_out, iua_out, **inputs):
 
         # try to get the recompression peak that occurs after pullback
         try:
-            # get first local maximum after pullback
-            rel_max_idx = signal.argrelmax(velocity_f_smooth, order=rc_neighbors)[0]
-            extrema_max = np.append(rel_max_idx, np.argmax(velocity_f_smooth))
-            extrema_max.sort()
-            rc_idx = extrema_max[
-                np.where(extrema_max == np.argmax(velocity_f_smooth))[0][0]
-                + 2
-                + rc_idx_correction
-            ]
+            # Search for recompression peak after the pullback minimum, within the bounded window
+            rc_search_slice = velocity_f_smooth[max_ten_idx:max_pullback_idx]
+            rel_max_local = signal.argrelmax(rc_search_slice, order=rc_neighbors)[0]
+
+            # Filter: recompression must be positive
+            valid_rc = rel_max_local[rc_search_slice[rel_max_local] > 0]
+
+            if len(valid_rc) == 0:
+                raise ValueError("No valid recompression peak found after pullback.")
+
+            rc_local_idx = valid_rc[0 + rc_idx_correction]
+            rc_idx = max_ten_idx + rc_local_idx
             t_rc = time_f[rc_idx]
             v_rc = velocity_f_smooth[rc_idx]
 
