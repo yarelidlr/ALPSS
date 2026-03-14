@@ -129,7 +129,8 @@ def hel_detection(
     rel_unc = np.abs(unc_clean) / max(max_vel, 1e-9)
     noise_mask = rel_unc < 1.0
     if np.sum(noise_mask) < 10:
-        noise_mask = np.ones(len(vel_clean), dtype=bool)
+        logger.warning("HEL: nearly all points have high relative uncertainty; skipping noise filter")
+        # Keep all points — don't filter, but don't silently expand the search window later
 
     time_clean = time_clean[noise_mask]
     vel_clean = vel_clean[noise_mask]
@@ -140,7 +141,14 @@ def hel_detection(
     if hel_end_ns is not None and hel_end_ns > hel_start_ns:
         search_mask &= time_clean <= hel_end_ns
     if np.sum(search_mask) < 10:
-        search_mask = np.ones(len(time_clean), dtype=bool)
+        logger.warning(
+            "HEL: only %d points in search window [%.1f, %.1f] ns. "
+            "Check that hel_start_time_ns and hel_end_time_ns are set correctly "
+            "(they are relative to the signal start time).",
+            np.sum(search_mask), hel_start_ns,
+            hel_end_ns if hel_end_ns is not None else np.nan,
+        )
+        return HELResult(ok=False)
 
     t_win = time_clean[search_mask]
     v_win = vel_clean[search_mask]

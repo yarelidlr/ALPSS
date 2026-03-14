@@ -118,17 +118,26 @@ def alpss_main(**inputs):
 
     # --- Phase 2c: HEL detection (optional) ---
     hel_out = _default_hel_output()
+    hel_start_abs = None
+    hel_end_abs = None
     hel_enabled = inputs.get("hel_detection_enabled", False)
     if hel_enabled:
         try:
             # Convert velocity time from seconds to nanoseconds for HEL
             time_ns = vc_out["time_f"] / 1e-9
+
+            # User's HEL window is relative to signal start; convert to absolute ns
+            t0_ns = time_ns[0]
+            hel_start_abs = t0_ns + inputs.get("hel_start_time_ns", 0.0)
+            hel_end_user = inputs.get("hel_end_time_ns", None)
+            hel_end_abs = (t0_ns + hel_end_user) if hel_end_user is not None else None
+
             hel_out = hel_detection(
                 time_ns,
                 vc_out["velocity_f_smooth"],
                 iua_out["vel_uncert"],
-                hel_start_ns=inputs.get("hel_start_time_ns", 0.0),
-                hel_end_ns=inputs.get("hel_end_time_ns", None),
+                hel_start_ns=hel_start_abs,
+                hel_end_ns=hel_end_abs,
                 angle_threshold_deg=inputs.get("hel_angle_threshold_deg", 45.0),
                 min_points=inputs.get("hel_detection_min_points", 3),
                 min_velocity=inputs.get("minimum_HEL_velocity_expected", 10.0),
@@ -167,8 +176,8 @@ def alpss_main(**inputs):
                 time_ns,
                 vc_out["velocity_f_smooth"],
                 hel_out,
-                hel_start_ns=inputs.get("hel_start_time_ns", 0.0),
-                hel_end_ns=inputs.get("hel_end_time_ns", time_ns[-1]),
+                hel_start_ns=hel_start_abs,
+                hel_end_ns=hel_end_abs if hel_end_abs is not None else time_ns[-1],
                 angle_threshold_deg=inputs.get("hel_angle_threshold_deg", 45.0),
                 sample_name=os.path.basename(inputs.get("filepath", "")),
                 sample_material=inputs.get("material", ""),
