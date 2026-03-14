@@ -28,7 +28,7 @@ tests/output_data/
 *.log
 *.sql
 *.sqlite
-CLAUDE.md
+claude_code_prompt.md
 # OS generated files #
 ######################
 .DS_Store
