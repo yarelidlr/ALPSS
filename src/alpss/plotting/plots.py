@@ -59,7 +59,7 @@ def plot_results(
     ax1.plot(
         iua_out["time_cut"] / 1e-9,
         iua_out["volt_fit"] * 1e3,
-        label="Sine Fit",
+        label="Carrier Reconstruction",
         c="tab:green",
     )
     ax1.axvspan(

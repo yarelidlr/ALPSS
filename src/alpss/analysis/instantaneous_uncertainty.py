@@ -1,18 +1,13 @@
-import numpy as np
-from scipy.optimize import curve_fit
-import traceback
 import logging
+
+import numpy as np
+from scipy.fft import fft, fftfreq, ifft
 
 
 # gaussian distribution
 def gauss(x, amp, sigma, mu):
     f = (amp / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
     return f
-
-
-# general function for a sinusoid
-def sin_func(x, a, b, c, d):
-    return a * np.sin(2 * np.pi * b * x + c) + d
 
 
 # calculate the fwhm of a gaussian distribution
@@ -105,22 +100,25 @@ def instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs):
     time_cut = time[0:steps_take]
     voltage_filt_early = voltage_filt[0:steps_take]
 
-    try:
-        # fit a sinusoid to the data
-        popt, pcov = curve_fit(
-            sin_func, time_cut, voltage_filt_early, p0=[0.1, cen, 0, 0]
-        )
-    except Exception:
-        # if sin fitting doesn't work set the fitting parameters to be zeros
-        logging.error(traceback.format_exc())
-        popt = [0, 0, 0, 0]
-        pcov = [0, 0, 0, 0]
+    # --- Spectral noise estimation (replaces curve_fit sinusoidal fit) ---
+    # Compute FFT of the pre-signal carrier window
+    fft_early = fft(voltage_filt_early)
+    freqs_early = fftfreq(len(voltage_filt_early), 1 / fs)
 
-    # calculate the fitted curve
-    volt_fit = sin_func(time_cut, popt[0], popt[1], popt[2], popt[3])
+    # Build a mask that covers the carrier peak and its negative-frequency mirror.
+    # Use the notch filter width from inputs as the carrier exclusion band.
+    carrier_halfwidth = inputs.get("wid", 5e7) / 2
+    carrier_mask = np.abs(np.abs(freqs_early) - cen) < carrier_halfwidth
 
-    # calculate the residuals
-    noise = voltage_filt_early - volt_fit
+    # Reconstruct the carrier-only signal for diagnostic plotting (replaces volt_fit)
+    carrier_fft = np.zeros_like(fft_early)
+    carrier_fft[carrier_mask] = fft_early[carrier_mask]
+    volt_fit = np.real(ifft(carrier_fft))
+
+    # Zero out the carrier peak, keep everything else as noise
+    noise_fft = fft_early.copy()
+    noise_fft[carrier_mask] = 0
+    noise = np.real(ifft(noise_fft))
 
     # get data for only the doi of the voltage
     voltage_filt_doi = voltage_filt[time_start_idx:time_end_idx]
@@ -158,8 +156,6 @@ def instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs):
     # dictionary to return outputs
     iua_out = {
         "time_cut": time_cut,
-        "popt": popt,
-        "pcov": pcov,
         "volt_fit": volt_fit,
         "noise": noise,
         "env_max_interp": env_max_interp,

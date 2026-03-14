@@ -55,6 +55,21 @@ def velocity_calculation(
         smoothing_mu=inputs["smoothing_mu"],
     )
 
+    # Verify length contract: all DOI arrays must match time_f
+    n_expected = len(time_f)
+    if len(velocity_f) != n_expected:
+        raise RuntimeError(
+            f"velocity_f length {len(velocity_f)} != time_f length {n_expected}. "
+            f"The domain of interest may extend too close to the data boundary "
+            f"for the requested smoothing window ({inputs['smoothing_window']})."
+        )
+    if len(velocity_f_smooth) != n_expected:
+        raise RuntimeError(
+            f"velocity_f_smooth length {len(velocity_f_smooth)} != time_f length {n_expected}. "
+            f"The domain of interest may extend too close to the data boundary "
+            f"for the requested smoothing window ({inputs['smoothing_window']})."
+        )
+
     # return a dictionary of the outputs
     vc_out = {
         "time_f": time_f,
