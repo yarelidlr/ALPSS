@@ -366,40 +366,66 @@ def plot_results(
         ax11.set_ylim([0, iua_out["freq_uncert_scaling"] * (inputs["lam"] / 2)])
 
     # table to show results of the run
+    # Values are formatted compactly to fit the panel width at a readable font size
+    def _fmt(val, decimals=2):
+        """Format a float compactly, returning '—' for NaN."""
+        if isinstance(val, float) and np.isnan(val):
+            return "—"
+        return f"{val:.{decimals}f}"
+
+    shock_stress_gpa = 0.5 * inputs["density"] * inputs["C0"] * sa_out["v_max_comp"] / 1e9
+    spall_gpa = sa_out["spall_strength_est"] / 1e9
+    spall_unc_gpa = fua_out["spall_uncert"] / 1e9
+    sr_1e6 = sa_out["strain_rate_est"] / 1e6
+    sr_unc_1e6 = fua_out["strain_rate_uncert"] / 1e6
+
     run_data1 = {
-        "Name": [
+        "": [
             "Date",
             "Time",
-            "File Name",
+            "File",
             "Run Time",
-            "Smoothing FWHM (ns)",
-            "Peak Shock Stress (GPa)",
-            "Strain Rate (x1e6)",
-            "Spall Strength (GPa)",
+            "FWHM (ns)",
+            "Shock (GPa)",
+            r"$\dot\varepsilon$ (×1e6)",
+            "Spall (GPa)",
         ],
-        "Value": [
+        " ": [
             start_time.strftime("%b %d %Y"),
             start_time.strftime("%I:%M %p"),
-            os.path.basename(inputs["filepath"]),
-            (end_time - start_time),
-            round(iua_out["tau"] * 1e9, 2),
-            round(
-                (0.5 * inputs["density"] * inputs["C0"] * sa_out["v_max_comp"]) / 1e9, 6
-            ),
-            rf"{round(sa_out['strain_rate_est'] / 1e6, 6)} $\pm$ {round(fua_out['strain_rate_uncert'] / 1e6, 6)}",
-            rf"{round(sa_out['spall_strength_est'] / 1e9, 6)} $\pm$ {round(fua_out['spall_uncert'] / 1e9, 6)}",
+            os.path.splitext(os.path.basename(inputs["filepath"]))[0][:28],
+            str(end_time - start_time).split(".")[0],
+            _fmt(iua_out["tau"] * 1e9),
+            _fmt(shock_stress_gpa, 3),
+            f"{_fmt(sr_1e6)} ± {_fmt(sr_unc_1e6)}",
+            f"{_fmt(spall_gpa, 3)} ± {_fmt(spall_unc_gpa, 3)}",
         ],
     }
 
     df1 = pd.DataFrame(data=run_data1)
-    cellLoc1 = "center"
-    loc1 = "center"
     table1 = ax13.table(
-        cellText=df1.values, colLabels=df1.columns, cellLoc=cellLoc1, loc=loc1
+        cellText=df1.values,
+        colLabels=df1.columns,
+        cellLoc="left",
+        loc="center",
+        colWidths=[0.42, 0.58],
     )
-    table1.auto_set_font_size(True)
-    table1.scale(1, 1.3)
-    ax13.axis("tight")
+    table1.auto_set_font_size(False)
+    table1.set_fontsize(11)
+    table1.scale(1, 1.6)
+
+    # Style: bold header row, left-align all cells
+    for (row, col), cell in table1.get_celld().items():
+        cell.set_edgecolor("#cccccc")
+        cell.set_linewidth(0.5)
+        if row == 0:
+            cell.set_text_props(fontweight="bold")
+            cell.set_facecolor("#f0f0f0")
+        else:
+            cell.set_facecolor("white")
+        # Left-align the value column with some padding
+        cell.PAD = 0.05
+
     ax13.axis("off")
 
     # fix the layout — pad values prevent label overlap with colorbars
