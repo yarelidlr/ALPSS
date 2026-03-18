@@ -283,4 +283,13 @@ def alpss_main(**inputs):
 
     logger.info("Outputs saved")
 
+    if inputs.get("display_plots") == "yes":
+        filename = os.path.splitext(os.path.basename(inputs["filepath"]))[0]
+        fig_path = os.path.abspath(os.path.join(inputs["out_files_dir"], f"{filename}-plots.png"))
+        if os.path.exists(fig_path):
+            os.startfile(fig_path)
+        else:
+            import matplotlib.pyplot as plt
+            plt.show()
+
     return (fig, items)

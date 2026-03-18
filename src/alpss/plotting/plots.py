@@ -25,7 +25,7 @@ def plot_results(
 
     # create the figure and axes
     plt.close("all")
-    fig = plt.figure(figsize=inputs["plot_figsize"], dpi=inputs["plot_dpi"])
+    fig = plt.figure(figsize=inputs["plot_figsize"], dpi=inputs["plot_dpi"], layout="tight")
     ax1 = plt.subplot2grid((3, 5), (0, 0))  # voltage data
     ax2 = plt.subplot2grid((3, 5), (0, 1))  # noise distribution histogram
     ax3 = plt.subplot2grid((3, 5), (1, 0))  # imported voltage spectrogram
@@ -405,10 +405,6 @@ def plot_results(
 
     # fix the layout
     plt.tight_layout()
-
-    # display the plots if desired. if this is turned off the plots will still save
-    if inputs["display_plots"] == "yes":
-        plt.show()
 
     return fig
 
