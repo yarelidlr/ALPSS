@@ -2,10 +2,12 @@ import argparse
 
 from alpss.alpss_watcher import Watcher
 from alpss.alpss_main import alpss_main
+from alpss.alpss_multipoint import alpss_multipoint
 import os
 import json
 import logging
 import sys
+import pandas as pd
 
 def start_watcher():
     w = Watcher()
@@ -49,6 +51,56 @@ def alpss_main_with_config(config=None):
 
     # Run ALPSS with the loaded config
     return alpss_main(**config)
+
+def alpss_multipoint_with_config(config=None):
+    """
+    Run alpss_multipoint with a given JSON configuration.
+
+    The JSON file should have the following structure::
+
+        {
+            "channels": {
+                "ch1": [{"tar_lam": 1550.000, "ref_lam": 1550.016, "probe_number": 10}],
+                "ch2": [{"tar_lam": 1531.116, "ref_lam": 1531.132, "probe_number": 6},
+                        {"tar_lam": 1537.397, "ref_lam": 1537.429, "probe_number": 9}]
+            },
+            "filepath": "C:/data/shot_{channel}.csv",
+            "freq_lower": 1e9,
+            "freq_upper": 2e9,
+            ... (all shared alpss_main kwargs) ...
+        }
+
+    Args:
+        config (str or dict, optional): Path to a JSON config file or a dict.
+    """
+    if config is None:
+        parser = argparse.ArgumentParser(
+            description="Run alpss_multipoint using a JSON config file"
+        )
+        parser.add_argument(
+            "config_path", type=str, help="Path to the JSON configuration file"
+        )
+        args = parser.parse_args()
+        config = load_json_config(args.config_path)
+    else:
+        config = load_json_config(config)
+
+    config = dict(config)  # shallow copy so we can pop without mutating caller's dict
+
+    raw_channels = config.pop("channels")
+    channels = {name: pd.DataFrame(rows) for name, rows in raw_channels.items()}
+
+    filepath = config.pop("filepath")
+    freq_lower = config.pop("freq_lower", 1e9)
+    freq_upper = config.pop("freq_upper", 1e9)
+    return alpss_multipoint(
+        channels=channels,
+        filepath=filepath,
+        freq_lower=freq_lower,
+        freq_upper=freq_upper,
+        **config,
+    )
+
 
 def alpss_cli():
     """

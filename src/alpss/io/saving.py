@@ -29,7 +29,12 @@ def save(
     **inputs,
 ):
     filename = os.path.splitext(os.path.basename(inputs["filepath"]))[0]
-    fname = os.path.join(inputs["out_files_dir"], filename)
+
+    # Adding in multipoint functionality. The probe number gets appended to the end of each filename
+    probe = "" if inputs.get("multipoint_probe") is None else f"_probe{inputs['multipoint_probe']}"
+
+    os.makedirs(inputs["out_files_dir"], exist_ok=True)
+    fname = os.path.join(inputs["out_files_dir"], filename + probe)
 
     # save the plots
     fig_assets = [fig]
