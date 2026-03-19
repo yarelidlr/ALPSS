@@ -1,11 +1,14 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import cv2 as cv
 from alpss.utils import stft
 import logging
 from scipy import signal
-from scipy.fft import fft, fftfreq
-import matplotlib.pyplot as plt
-import os
+from numpy.fft import fft,fftfreq
+from scipy.fft import ifft
+from scipy.fftpack import fftshift
+from scipy.signal import savgol_filter
+
 
 # function to find the specific domain of interest in the larger signal
 def spall_doi_finder(data, **inputs):
@@ -127,27 +130,31 @@ def spall_doi_finder(data, **inputs):
             carrier_band_time = inputs["carrier_band_time"]
             k=inputs["cusum_offset"]
             h=inputs["cusum_threshold"]
+            f_min = inputs["freq_min"]
+            f_max = inputs["freq_max"]
 
-            # Carrier band Frequency
-            carrier_mask = time < carrier_band_time
-            carrier_fft_vals = fft(voltage[carrier_mask])
-            carrier_fft_freqs = fftfreq(voltage[carrier_mask].size,1/fs)
-            mask3 = carrier_fft_freqs > 0
-            max_idx = np.argmax(np.abs(carrier_fft_vals*mask3))
-            cen = carrier_fft_freqs[max_idx]
-            idx = np.argmin(np.abs(f-cen))
-            signal = mag[idx,:]
-            mask4 = t < carrier_band_time
-            mask5 = t > (t.max()-carrier_band_time)
-            mu0 = np.mean(signal[mask4])
-            mu1 =  0  # Expected post-change signal level
-            sigma0 = np.var(signal[mask4])
+            # Apply a bandpass filter to get rid of noise outside of frequency bounds
+            numpts = len(time)
+            freq = fftshift(np.arange((-numpts / 2), (numpts / 2)) * fs / numpts)
+            filt = (freq > f_min) * (freq < f_max)
+            voltage_filt = ifft(fft(voltage) * filt)
+
+            # Unwrap the phase
+            phas = np.unwrap(np.angle(voltage_filt), axis=0)
+
+            # Analyzed signal is equal to the gradient of the phase. Essentially a pseudo-velocity
+            signal = np.gradient(savgol_filter(phas,inputs["smoothing_window"],3))
+
+            # Initial mean and standard deviation of the signal. Utilized in cusum
+            mask = time < carrier_band_time
+            mu0 = np.mean(signal[mask])
+            sigma0 = np.var(signal[mask])
 
             print('signal shape: ', signal.shape)
-            detection_indices, change_indices, G, s = cusum(signal, mu0, mu1, sigma0, h, k)
+            detection_indices, change_indices, G, s = cusum(signal, mu0, sigma0, h, k)
 
             print("change _indices shape: ", change_indices.shape)
-            detection_time = t[change_indices]
+            detection_time = time[change_indices]
 
             # these params become nan because they are only needed if the program
             # is finding the signal start time automatically
@@ -211,7 +218,7 @@ def spall_doi_finder(data, **inputs):
     return sdf_out
 
 
-def cusum(signal, mu0, mu1, sigma, h, k):
+def cusum(signal, mu0, sigma, h, k):
     """
     Detect a single mean shift from mu0 to mu1 using CUSUM.
     Returns:
