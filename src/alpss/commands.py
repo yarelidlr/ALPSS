@@ -93,11 +93,15 @@ def alpss_multipoint_with_config(config=None):
     filepath = config.pop("filepath")
     freq_lower = config.pop("freq_lower", 1e9)
     freq_upper = config.pop("freq_upper", 1e9)
+    freq_refine_lower = config.pop("freq_refine_lower", None)
+    freq_refine_upper = config.pop("freq_refine_upper", None)
     return alpss_multipoint(
         channels=channels,
         filepath=filepath,
         freq_lower=freq_lower,
         freq_upper=freq_upper,
+        freq_refine_lower=freq_refine_lower,
+        freq_refine_upper=freq_refine_upper,
         **config,
     )
 
