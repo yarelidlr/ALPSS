@@ -116,12 +116,20 @@ def spall_doi_finder(data, **inputs):
             
             # add in the user correction for the start time
             t_start_detected = t[cidx]
+
+            # these params are only needed if finding start time using cusum
+            signal = np.nan
+            s = np.nan
         elif inputs.get('start_time_user') == "iq":
             t_start_detected_iq, amplitude, phase, iq_fig = iq_analysis(inputs, voltage, fs, time)
 
             carr_idx = np.nan
             f_doi_carr_top_idx = np.nan
             f_doi_top_line_clean = np.nan
+
+            # these params are only needed if using cusum
+            signal = np.nan
+            s = np.nan
             
             t_start_detected = t_start_detected_iq
         elif inputs["start_time_user"]=="cusum": 
@@ -174,6 +182,8 @@ def spall_doi_finder(data, **inputs):
         f_doi_top_line_clean = np.nan
         carr_idx = np.nan
         f_doi_carr_top_idx = np.nan
+        signal = np.nan
+        s = np.nan
 
         # use the user input signal start time to define the domain of interest
         t_start_detected = t[np.argmin(np.abs(t - inputs["start_time_user"]))]
@@ -207,7 +217,9 @@ def spall_doi_finder(data, **inputs):
         "t_doi_start": t_doi_start,
         "t_doi_end": t_doi_end,
         "power_doi": power_doi,
-        "start_time_user": inputs.get('start_time_user')
+        "start_time_user": inputs.get('start_time_user'),
+        "cusum_signal": signal,
+        "cusum_s": s,
     }
 
     if inputs.get('start_time_user') == "iq":
@@ -228,8 +240,7 @@ def cusum(signal, mu0, sigma, h, k):
     """
     # Score for general mean change
     Z = (signal - mu0)/(np.sqrt(sigma))
-    s = -Z - k
-    # s = ((mu1 - mu0) / sigma) * (signal - mu0) - ((mu0**2 - mu1**2) / (2 * sigma))
+    s = Z - k
     G = np.zeros_like(s)
 
     for k in range(1, len(s)):
