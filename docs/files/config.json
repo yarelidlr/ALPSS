@@ -53,7 +53,7 @@
     ],
     "plot_dpi": 300,
     "iq_threshold_factor": 0.4,
-    "cusum_offset": 5,
+    "cusum_offset": 1,
     "cusum_threshold": 1000,
     "t_fit_begin": 20e-9,
     "t_fit_end": 300e-9

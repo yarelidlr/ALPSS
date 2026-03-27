@@ -120,6 +120,7 @@ def spall_doi_finder(data, **inputs):
             # these params are only needed if finding start time using cusum
             signal = np.nan
             s = np.nan
+            time_eval = np.nan
         elif inputs.get('start_time_user') == "iq":
             t_start_detected_iq, amplitude, phase, iq_fig = iq_analysis(inputs, voltage, fs, time)
 
@@ -130,7 +131,8 @@ def spall_doi_finder(data, **inputs):
             # these params are only needed if using cusum
             signal = np.nan
             s = np.nan
-            
+            time_eval = np.nan
+
             t_start_detected = t_start_detected_iq
         elif inputs["start_time_user"]=="cusum": 
 
@@ -143,26 +145,33 @@ def spall_doi_finder(data, **inputs):
 
             # Apply a bandpass filter to get rid of noise outside of frequency bounds
             numpts = len(time)
-            freq = fftshift(np.arange((-numpts / 2), (numpts / 2)) * fs / numpts)
-            filt = (freq > f_min) * (freq < f_max)
-            voltage_filt = ifft(fft(voltage) * filt)
+            pad_len = numpts // 2
+            voltage_padded = np.pad(voltage, (pad_len, pad_len), mode='reflect')
+            numpts_padded = len(voltage_padded)
+            freq_padded = fftshift(np.arange((-numpts_padded / 2), (numpts_padded / 2)) * fs / numpts_padded)
+            filt_padded = (freq_padded > f_min) * (freq_padded < f_max)
+            voltage_filt_padded = ifft(fft(voltage_padded) * filt_padded)
+            voltage_filt = voltage_filt_padded[pad_len:pad_len + numpts]
 
             # Unwrap the phase
             phas = np.unwrap(np.angle(voltage_filt), axis=0)
 
             # Analyzed signal is equal to the gradient of the phase. Essentially a pseudo-velocity
-            signal = np.gradient(savgol_filter(phas,inputs["smoothing_window"],3))
+            # signal = np.gradient(savgol_filter(phas,inputs["smoothing_window"],3))
+            signal = np.gradient(phas)
+
+            # Skip leading edge samples to avoid filter artifact spikes
+            edge_skip = 100
+            signal_eval = signal[edge_skip:]
+            time_eval = time[edge_skip:]
 
             # Initial mean and standard deviation of the signal. Utilized in cusum
-            mask = time < carrier_band_time
-            mu0 = np.mean(signal[mask])
-            sigma0 = np.var(signal[mask])
+            mask = time_eval < carrier_band_time
+            mu0 = np.mean(signal_eval[mask])
+            sigma0 = np.var(signal_eval[mask])
 
-            print('signal shape: ', signal.shape)
-            detection_indices, change_indices, G, s = cusum(signal, mu0, sigma0, h, k)
-
-            print("change _indices shape: ", change_indices.shape)
-            detection_time = time[change_indices]
+            detection_indices, change_indices, G, s = cusum(signal_eval, mu0, sigma0, h, k)
+            detection_time = time_eval[change_indices]
 
             # these params become nan because they are only needed if the program
             # is finding the signal start time automatically
@@ -184,6 +193,7 @@ def spall_doi_finder(data, **inputs):
         f_doi_carr_top_idx = np.nan
         signal = np.nan
         s = np.nan
+        time_eval = np.nan
 
         # use the user input signal start time to define the domain of interest
         t_start_detected = t[np.argmin(np.abs(t - inputs["start_time_user"]))]
@@ -220,6 +230,7 @@ def spall_doi_finder(data, **inputs):
         "start_time_user": inputs.get('start_time_user'),
         "cusum_signal": signal,
         "cusum_s": s,
+        "cusum_time": time_eval,
     }
 
     if inputs.get('start_time_user') == "iq":

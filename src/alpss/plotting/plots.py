@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import pandas as pd
 import os
-from alpss.utils import stft
+from alpss.utils import stft, display_figure, open_file_for_display
 import numpy as np
 import random
 import string
@@ -153,7 +153,7 @@ def plot_results(
 
     #################### plotting the thresholded spectrogram on the ROI to show how the signal start time is found
     if inputs["start_time_user"] == "cusum":
-        ax4.plot(sdf_out["time"]*1e9,sdf_out["cusum_s"])
+        ax4.plot(sdf_out["cusum_time"]*1e9,sdf_out["cusum_s"])
         ax4.set_title("Cusum Detection")
         ax4.set_xlabel("Time (ns)")
     else:
@@ -497,14 +497,18 @@ def plot_voltage(data, **inputs):
     fig.suptitle("ERROR: Program Failed", c="r", fontsize=16)
 
     plt.tight_layout()
+    dest = None
     if inputs["save_data"] == "yes":
         fname = os.path.join(
             inputs["out_files_dir"],
             os.path.splitext(os.path.basename(inputs["filepath"]))[0],
         )
         dest = f"{fname}--error_plot.png"
-        fig.savefig(dest)
+        fig.savefig(dest, dpi="figure", format="png", facecolor="w")
     if inputs["display_plots"] == "yes":
-        plt.show()
+        if dest is not None and os.path.exists(dest):
+            open_file_for_display(dest)
+        else:
+            display_figure(fig)
 
-    return fig, {"error": [mag, dest if inputs["save_data"] == "yes" else None]}
+    return fig, {"error": [mag, dest]}
