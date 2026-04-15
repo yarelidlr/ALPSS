@@ -185,7 +185,9 @@ def alpss_main(**inputs):
         try:
             logger.info("Running HEL detection...")
             # Convert velocity time from seconds to nanoseconds for HEL
-            time_ns = vc_out["time_f"] / 1e-9
+            # AND zero the time to signal start time 
+            t_start_corrected = sdf_out["t_start_corrected"]
+            time_ns = (vc_out["time_f"] - t_start_corrected) / 1e-9
             hel_out = hel_detection(
                 time_ns,
                 vc_out["velocity_f_smooth"],
@@ -240,7 +242,7 @@ def alpss_main(**inputs):
         try:
             time_ns = vc_out["time_f"] / 1e-9
             hel_fig = plot_hel_detection(
-                time_ns,
+                time_ns - t_start_corrected*1e9,
                 vc_out["velocity_f_smooth"],
                 hel_out,
                 hel_start_ns=inputs.get("hel_start_time_ns", 0.0),
