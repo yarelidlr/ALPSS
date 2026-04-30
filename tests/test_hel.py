@@ -1,22 +1,7 @@
 import pytest
 import numpy as np
 from alpss.analysis.hel import hel_detection, elastic_shock_strain_rate, HELResult
-
-# Shared minimal kwargs so every call is explicit.
-_BASE = dict(
-    hel_start_ns=0.0,
-    hel_end_ns=None,
-    angle_threshold_deg=45.0,
-    min_points=3,
-    min_velocity=10.0,
-    density=None,
-    acoustic_velocity=None,
-    C_L=None,
-    method="gradient",
-    hel_rdp_epsilon=2.0,
-    hel_slope_drop_ratio=0.85,
-    hel_min_plateau_duration=0.5,
-)
+from conftest import HEL_DETECTION_BASE as _BASE
 
 
 class TestElasticShockStrainRate:
@@ -35,44 +20,8 @@ class TestElasticShockStrainRate:
         assert np.isnan(rate)
 
 
+
 class TestHELDetection:
-    @pytest.fixture
-    def synthetic_hel_signal(self):
-        """Create a synthetic velocity trace with a clear HEL plateau.
-
-        Uses ~1 ns spacing (realistic for PDV data) so that gradients
-        at the plateau are small enough to be detected as low-slope.
-        """
-        np.random.seed(42)
-        # Time in ns: -5 to 30 ns, ~0.5 ns spacing (70 points)
-        t = np.linspace(-5, 30, 70)
-        v = np.zeros_like(t)
-
-        # Phase 1: baseline noise (before 0 ns)
-        v[t < 0] = np.random.normal(0, 0.3, np.sum(t < 0))
-
-        # Phase 2: quick rise to HEL plateau (0-2 ns)
-        rise_mask = (t >= 0) & (t < 2)
-        rise_t = t[rise_mask]
-        v[rise_mask] = 200 * (rise_t / 2)
-
-        # Phase 3: HEL plateau (2-8 ns) - ~200 m/s nearly flat
-        plateau_mask = (t >= 2) & (t < 8)
-        v[plateau_mask] = 200 + np.random.normal(0, 0.2, np.sum(plateau_mask))
-
-        # Phase 4: ramp to peak (8-15 ns)
-        ramp_mask = (t >= 8) & (t < 15)
-        ramp_t = t[ramp_mask]
-        v[ramp_mask] = 200 + (ramp_t - 8) * 60  # 200 to 620 m/s
-
-        # Phase 5: peak and decay (15-30 ns)
-        decay_mask = t >= 15
-        decay_t = t[decay_mask]
-        v[decay_mask] = 620 * np.exp(-(decay_t - 15) * 0.1)
-
-        uncertainty = np.ones_like(v) * 5.0
-        return t, v, uncertainty
-
     def test_detects_hel_in_synthetic_signal(self, synthetic_hel_signal):
         t, v, u = synthetic_hel_signal
         result = hel_detection(

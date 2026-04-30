@@ -2,67 +2,12 @@ import pytest
 import numpy as np
 
 from alpss.analysis.hel import hel_detection, hel_detection_rdp_hybrid, HELResult
-
-# Shared minimal kwargs so every call is explicit.
-_RDP_BASE = dict(
-    hel_start_ns=0.0,
-    hel_end_ns=None,
-    min_velocity=10.0,
-    density=None,
-    acoustic_velocity=None,
-    C_L=None,
-    rdp_epsilon=2.0,
-    slope_drop_ratio=0.85,
-    min_plateau_duration_ns=0.5,
-    min_points=3,
-    angle_threshold_deg=45.0,
-)
-
-_HEL_BASE = dict(
-    hel_start_ns=0.0,
-    hel_end_ns=None,
-    angle_threshold_deg=45.0,
-    min_points=3,
-    min_velocity=10.0,
-    density=None,
-    acoustic_velocity=None,
-    C_L=None,
-    method="gradient",
-    hel_rdp_epsilon=2.0,
-    hel_slope_drop_ratio=0.85,
-    hel_min_plateau_duration=0.5,
-)
-
-
-@pytest.fixture
-def synthetic_hel_signal():
-    """Synthetic PDV trace with a sharp HEL knee at ~4 ns."""
-    np.random.seed(7)
-    t = np.linspace(-2, 25, 200)
-    v = np.zeros_like(t)
-
-    # Baseline noise before t=0
-    v[t < 0] = np.random.normal(0, 0.5, (t < 0).sum())
-
-    # Steep rise to HEL plateau (0–4 ns)
-    rise_mask = (t >= 0) & (t < 4)
-    v[rise_mask] = 160 * t[rise_mask] / 4 + np.random.normal(0, 0.3, rise_mask.sum())
-
-    # HEL plateau (4–12 ns) at ~160 m/s
-    plat_mask = (t >= 4) & (t < 12)
-    v[plat_mask] = 160 + np.random.normal(0, 0.5, plat_mask.sum())
-
-    # Ramp to peak (12–25 ns)
-    ramp_mask = t >= 12
-    v[ramp_mask] = 160 + 30 * (t[ramp_mask] - 12) + np.random.normal(0, 1, ramp_mask.sum())
-
-    unc = np.ones_like(v) * 5.0
-    return t, v, unc
+from conftest import HEL_DETECTION_BASE as _HEL_BASE, HEL_RDP_BASE as _RDP_BASE
 
 
 class TestHELRDPHybrid:
-    def test_detects_hel_in_synthetic(self, synthetic_hel_signal):
-        t, v, u = synthetic_hel_signal
+    def test_detects_hel_in_synthetic(self, synthetic_hel_signal_rdp):
+        t, v, u = synthetic_hel_signal_rdp
         result = hel_detection_rdp_hybrid(
             t, v, u,
             **{**_RDP_BASE, "hel_start_ns": 0.0, "hel_end_ns": 15.0,
@@ -75,8 +20,8 @@ class TestHELRDPHybrid:
         assert result.strength_gpa > 0
         assert result.free_surface_velocity == pytest.approx(160, abs=15)
 
-    def test_strain_rate_is_positive(self, synthetic_hel_signal):
-        t, v, u = synthetic_hel_signal
+    def test_strain_rate_is_positive(self, synthetic_hel_signal_rdp):
+        t, v, u = synthetic_hel_signal_rdp
         result = hel_detection_rdp_hybrid(
             t, v, u,
             **{**_RDP_BASE, "hel_start_ns": 0.0, "hel_end_ns": 15.0,
@@ -85,8 +30,8 @@ class TestHELRDPHybrid:
         if result.ok:
             assert result.strain_rate > 0
 
-    def test_returns_helresult_always(self, synthetic_hel_signal):
-        t, v, u = synthetic_hel_signal
+    def test_returns_helresult_always(self, synthetic_hel_signal_rdp):
+        t, v, u = synthetic_hel_signal_rdp
         result = hel_detection_rdp_hybrid(t, v, u, **{**_RDP_BASE, "min_velocity": 9999.0})
         assert isinstance(result, HELResult)
 
@@ -98,8 +43,8 @@ class TestHELRDPHybrid:
         assert isinstance(result, HELResult)
         assert result.method in ("rdp_linear", "gradient", "gradient_fallback")
 
-    def test_rdp_points_stored_when_ok(self, synthetic_hel_signal):
-        t, v, u = synthetic_hel_signal
+    def test_rdp_points_stored_when_ok(self, synthetic_hel_signal_rdp):
+        t, v, u = synthetic_hel_signal_rdp
         result = hel_detection_rdp_hybrid(
             t, v, u,
             **{**_RDP_BASE, "hel_start_ns": 0.0, "hel_end_ns": 15.0,
@@ -109,9 +54,9 @@ class TestHELRDPHybrid:
             assert result.rdp_points is not None
             assert result.rdp_points.shape[1] == 2
 
-    def test_hel_detection_dispatches_to_hybrid(self, synthetic_hel_signal):
+    def test_hel_detection_dispatches_to_hybrid(self, synthetic_hel_signal_rdp):
         """hel_detection(method='rdp_linear') should delegate correctly."""
-        t, v, u = synthetic_hel_signal
+        t, v, u = synthetic_hel_signal_rdp
         result = hel_detection(
             t, v, u,
             **{**_HEL_BASE, "hel_start_ns": 0.0, "hel_end_ns": 15.0,
@@ -122,9 +67,9 @@ class TestHELRDPHybrid:
         assert isinstance(result, HELResult)
         assert result.method in ("rdp_linear", "gradient_fallback", "gradient")
 
-    def test_hel_detection_gradient_still_works(self, synthetic_hel_signal):
+    def test_hel_detection_gradient_still_works(self, synthetic_hel_signal_rdp):
         """Original gradient method must be unaffected."""
-        t, v, u = synthetic_hel_signal
+        t, v, u = synthetic_hel_signal_rdp
         result = hel_detection(
             t, v, u,
             **{**_HEL_BASE, "hel_start_ns": 0.0, "hel_end_ns": 15.0,
