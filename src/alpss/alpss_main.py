@@ -155,7 +155,7 @@ def alpss_main(**inputs):
                 vc_out["velocity_f_smooth"],
                 hel_out,
                 hel_start_ns=inputs.get("hel_start_time_ns"),
-                hel_end_ns=inputs.get("hel_end_time_ns", time_ns[-1]),
+                hel_end_ns=inputs.get("hel_end_time_ns"),
                 angle_threshold_deg=inputs.get("hel_angle_threshold_deg"),
                 sample_name=os.path.basename(inputs.get("filepath", "")),
                 sample_material=inputs.get("material", ""),
