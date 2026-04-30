@@ -1,11 +1,12 @@
 import numpy as np
 import cv2 as cv
-from alpss.utils import stft
+from alpss.utils.helpers import stft
 import logging
 from scipy import signal
 from scipy.fft import fft, fftfreq
 import matplotlib.pyplot as plt
 import os
+
 
 # function to find the specific domain of interest in the larger signal
 def spall_doi_finder(data, **inputs):
@@ -68,8 +69,8 @@ def spall_doi_finder(data, **inputs):
             return False
 
     # start_time_user is either a float for manual search, or a string determining the algorithm to find t_start_detected
-    if not is_a_float(inputs.get("start_time_user")): 
-        if inputs.get('start_time_user') == "otsu":
+    if not is_a_float(inputs.get("start_time_user")):
+        if inputs.get("start_time_user") == "otsu":
             # Find the position/row of the top of the binary spectrogram for each time/column
             col_len = th3.shape[1]  # number of columns
             row_len = th3.shape[0]  # number of columns
@@ -110,41 +111,45 @@ def spall_doi_finder(data, **inputs):
                 cidx = highest_idx - check_idx - 1
                 if top_line_clean[cidx] <= f_doi_carr_top_idx:
                     break
-            
+
             # add in the user correction for the start time
             t_start_detected = t[cidx]
-        elif inputs.get('start_time_user') == "iq":
-            t_start_detected_iq, amplitude, phase, iq_fig = iq_analysis(inputs, voltage, fs, time)
+        elif inputs.get("start_time_user") == "iq":
+            t_start_detected_iq, amplitude, phase, iq_fig = iq_analysis(
+                inputs, voltage, fs, time
+            )
 
             carr_idx = np.nan
             f_doi_carr_top_idx = np.nan
             f_doi_top_line_clean = np.nan
-            
+
             t_start_detected = t_start_detected_iq
-        elif inputs["start_time_user"]=="cusum": 
+        elif inputs["start_time_user"] == "cusum":
 
             # Collect necessary parameters
             carrier_band_time = inputs["carrier_band_time"]
-            k=inputs["cusum_offset"]
-            h=inputs["cusum_threshold"]
+            k = inputs["cusum_offset"]
+            h = inputs["cusum_threshold"]
 
             # Carrier band Frequency
             carrier_mask = time < carrier_band_time
             carrier_fft_vals = fft(voltage[carrier_mask])
-            carrier_fft_freqs = fftfreq(voltage[carrier_mask].size,1/fs)
+            carrier_fft_freqs = fftfreq(voltage[carrier_mask].size, 1 / fs)
             mask3 = carrier_fft_freqs > 0
-            max_idx = np.argmax(np.abs(carrier_fft_vals*mask3))
+            max_idx = np.argmax(np.abs(carrier_fft_vals * mask3))
             cen = carrier_fft_freqs[max_idx]
-            idx = np.argmin(np.abs(f-cen))
-            signal = mag[idx,:]
+            idx = np.argmin(np.abs(f - cen))
+            signal = mag[idx, :]
             mask4 = t < carrier_band_time
-            mask5 = t > (t.max()-carrier_band_time)
+            mask5 = t > (t.max() - carrier_band_time)
             mu0 = np.mean(signal[mask4])
-            mu1 =  0  # Expected post-change signal level
+            mu1 = 0  # Expected post-change signal level
             sigma0 = np.var(signal[mask4])
 
-            print('signal shape: ', signal.shape)
-            detection_indices, change_indices, G, s = cusum(signal, mu0, mu1, sigma0, h, k)
+            print("signal shape: ", signal.shape)
+            detection_indices, change_indices, G, s = cusum(
+                signal, mu0, mu1, sigma0, h, k
+            )
 
             print("change _indices shape: ", change_indices.shape)
             detection_time = t[change_indices]
@@ -158,7 +163,9 @@ def spall_doi_finder(data, **inputs):
             # use the user input signal start time to define the domain of interest
             t_start_detected = detection_time
         else:
-            raise TypeError(f"invalid mode assigned to variable 'start_time_user': {inputs.get('start_time_user')}")
+            raise TypeError(
+                f"invalid mode assigned to variable 'start_time_user': {inputs.get('start_time_user')}"
+            )
 
     # if using a user input for the signal start time
     else:
@@ -200,13 +207,13 @@ def spall_doi_finder(data, **inputs):
         "t_doi_start": t_doi_start,
         "t_doi_end": t_doi_end,
         "power_doi": power_doi,
-        "start_time_user": inputs.get('start_time_user')
+        "start_time_user": inputs.get("start_time_user"),
     }
 
-    if inputs.get('start_time_user') == "iq":
-        sdf_out['amplitude'] = amplitude
-        sdf_out['phase'] = phase
-        sdf_out['iq_fig'] = iq_fig
+    if inputs.get("start_time_user") == "iq":
+        sdf_out["amplitude"] = amplitude
+        sdf_out["phase"] = phase
+        sdf_out["iq_fig"] = iq_fig
 
     return sdf_out
 
@@ -220,13 +227,13 @@ def cusum(signal, mu0, mu1, sigma, h, k):
     - Full G[k] array
     """
     # Score for general mean change
-    Z = (signal - mu0)/(np.sqrt(sigma))
+    Z = (signal - mu0) / (np.sqrt(sigma))
     s = -Z - k
     # s = ((mu1 - mu0) / sigma) * (signal - mu0) - ((mu0**2 - mu1**2) / (2 * sigma))
     G = np.zeros_like(s)
 
     for k in range(1, len(s)):
-        G[k] = max(G[k-1] + s[k], 0)
+        G[k] = max(G[k - 1] + s[k], 0)
 
         if G[k] > h:
             detect_idx = k
@@ -237,50 +244,59 @@ def cusum(signal, mu0, mu1, sigma, h, k):
     # If no change detected
     return None, None, G, s
 
+
 def iq_analysis(inputs, voltage, fs, time):
     # Extract carrier frequency from input data
     N = len(voltage)
     fft_result = np.fft.fft(voltage)
-    freq = np.fft.fftfreq(N, 1/fs)
+    freq = np.fft.fftfreq(N, 1 / fs)
     positive_freq_mask = freq > 0
     positive_freq = freq[positive_freq_mask]
     positive_fft = np.abs(fft_result[positive_freq_mask])
 
     # Find the frequency with maximum amplitude within the specified range
-    freq_range_mask = (positive_freq >= inputs["freq_min"]) & (positive_freq <= inputs["freq_max"])
+    freq_range_mask = (positive_freq >= inputs["freq_min"]) & (
+        positive_freq <= inputs["freq_max"]
+    )
     carrier_idx = np.argmax(positive_fft[freq_range_mask])
     carrier_frequency = positive_freq[freq_range_mask][carrier_idx]
 
-    logging.info(f"Extracted carrier frequency during IQ analysis: {carrier_frequency} Hz")
-    
+    logging.info(
+        f"Extracted carrier frequency during IQ analysis: {carrier_frequency} Hz"
+    )
+
     # Demodulate signal
     I = voltage * np.cos(2 * np.pi * carrier_frequency * time)
     Q = voltage * np.sin(2 * np.pi * carrier_frequency * time)
 
     # Apply Gaussian smoothing with skip points
-    skip_points = 100 # skipping initial points to avoid IQ analysis induced signal drop
+    skip_points = (
+        100  # skipping initial points to avoid IQ analysis induced signal drop
+    )
     window_length = 801
-    window = np.exp(-0.5 * (np.arange(0, window_length) - (window_length - 1.0) / 2.0) / 10**2)
-    I_smooth = signal.convolve(I, window, mode='same')[skip_points:] / sum(window)
-    Q_smooth = signal.convolve(Q, window, mode='same')[skip_points:] / sum(window)
-    
+    window = np.exp(
+        -0.5 * (np.arange(0, window_length) - (window_length - 1.0) / 2.0) / 10**2
+    )
+    I_smooth = signal.convolve(I, window, mode="same")[skip_points:] / sum(window)
+    Q_smooth = signal.convolve(Q, window, mode="same")[skip_points:] / sum(window)
+
     # Calculate amplitude and phase
     amplitude = np.sqrt(I_smooth**2 + Q_smooth**2)
     phase = np.unwrap(np.arctan2(Q_smooth, I_smooth))
 
     # Find initial stable amplitude
-    initial_amplitude = np.mean(amplitude[:int(len(amplitude)/4.5)])
+    initial_amplitude = np.mean(amplitude[: int(len(amplitude) / 4.5)])
 
     # Allow user-defined threshold factor via inputs; default to existing 0.4
-    iq_threshold_factor = inputs['iq_threshold_factor']
+    iq_threshold_factor = inputs["iq_threshold_factor"]
     threshold = iq_threshold_factor * initial_amplitude
-    
+
     # Detect start time using 50% amplitude drop
     start_index = np.where(amplitude < threshold)[0][0]
     t_start_detected_iq = time[start_index]
 
     # After calculating amplitude, adjust time array to match
-    time_adjusted = time[skip_points:skip_points+len(amplitude)]
+    time_adjusted = time[skip_points : skip_points + len(amplitude)]
 
     # Convert amplitude to mV and time to microseconds
     amplitude_mV = amplitude * 1e3
@@ -288,43 +304,71 @@ def iq_analysis(inputs, voltage, fs, time):
 
     ###### Plot with matched array lengths and square aspect ratio
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 8))
-    ax1.plot(time_us, amplitude_mV, label='Complex Amplitude')
-    
+    ax1.plot(time_us, amplitude_mV, label="Complex Amplitude")
+
     # Create the actual step function used for detection
     # Before start time: amplitude is above threshold (normal)
     # After start time: amplitude drops below threshold (detected)
-    step_function = np.where(time_us < t_start_detected_iq * 1e6, initial_amplitude * 1e3, threshold * 1e3)
-    ax1.plot(time_us, step_function, 'r--', linewidth=2, label='Detection Threshold')
-    ax1.axhline(y=threshold * 1e3, color='orange', linestyle=':', alpha=0.7, label=f'Threshold ({threshold*1e3:.1f} mV)')
-    ax1.axvline(x=t_start_detected_iq * 1e6, color='red', linestyle='-', linewidth=2, 
-                label=f'Start Time (IQ): {t_start_detected_iq*1e6:.1f} μs')
-    ax1.set_ylabel('Amplitude (mV)', fontsize=20)
-    ax1.set_xlabel('Time (μs)', fontsize=20)
+    step_function = np.where(
+        time_us < t_start_detected_iq * 1e6, initial_amplitude * 1e3, threshold * 1e3
+    )
+    ax1.plot(time_us, step_function, "r--", linewidth=2, label="Detection Threshold")
+    ax1.axhline(
+        y=threshold * 1e3,
+        color="orange",
+        linestyle=":",
+        alpha=0.7,
+        label=f"Threshold ({threshold*1e3:.1f} mV)",
+    )
+    ax1.axvline(
+        x=t_start_detected_iq * 1e6,
+        color="red",
+        linestyle="-",
+        linewidth=2,
+        label=f"Start Time (IQ): {t_start_detected_iq*1e6:.1f} μs",
+    )
+    ax1.set_ylabel("Amplitude (mV)", fontsize=20)
+    ax1.set_xlabel("Time (μs)", fontsize=20)
     ax1.legend(fontsize=12)
-    ax1.tick_params(axis='both', labelsize=20)
+    ax1.tick_params(axis="both", labelsize=20)
 
     fig_iq, ax_iq = plt.subplots(figsize=(10, 6))
-    ax_iq.plot(time_us, amplitude_mV, label='Complex Amplitude', linewidth=1.5)
-    step_function = np.where(time_us < t_start_detected_iq * 1e6, initial_amplitude * 1e3, threshold * 1e3)
-    ax_iq.plot(time_us, step_function, 'r--', linewidth=2, label='Detection Step Function')
-    ax_iq.axhline(y=threshold * 1e3, color='orange', linestyle=':', alpha=0.7, linewidth=2,
-                label=f'Detection Threshold ({threshold*1e3:.1f} mV)')
-    ax_iq.axvline(x=t_start_detected_iq * 1e6, color='red', linestyle='-', linewidth=3,
-                label=f'Start Time Detected: {t_start_detected_iq*1e6:.1f} μs')
-    ax_iq.set_ylabel('Amplitude (mV)', fontsize=16)
-    ax_iq.set_xlabel('Time (μs)', fontsize=16)
-    ax_iq.set_title('IQ Analysis: Start Time Detection', fontsize=18, fontweight='bold')
-    ax_iq.legend(fontsize=12, loc='upper right')
-    ax_iq.tick_params(axis='both', labelsize=14)
+    ax_iq.plot(time_us, amplitude_mV, label="Complex Amplitude", linewidth=1.5)
+    step_function = np.where(
+        time_us < t_start_detected_iq * 1e6, initial_amplitude * 1e3, threshold * 1e3
+    )
+    ax_iq.plot(
+        time_us, step_function, "r--", linewidth=2, label="Detection Step Function"
+    )
+    ax_iq.axhline(
+        y=threshold * 1e3,
+        color="orange",
+        linestyle=":",
+        alpha=0.7,
+        linewidth=2,
+        label=f"Detection Threshold ({threshold*1e3:.1f} mV)",
+    )
+    ax_iq.axvline(
+        x=t_start_detected_iq * 1e6,
+        color="red",
+        linestyle="-",
+        linewidth=3,
+        label=f"Start Time Detected: {t_start_detected_iq*1e6:.1f} μs",
+    )
+    ax_iq.set_ylabel("Amplitude (mV)", fontsize=16)
+    ax_iq.set_xlabel("Time (μs)", fontsize=16)
+    ax_iq.set_title("IQ Analysis: Start Time Detection", fontsize=18, fontweight="bold")
+    ax_iq.legend(fontsize=12, loc="upper right")
+    ax_iq.tick_params(axis="both", labelsize=14)
     ax_iq.grid(True, alpha=0.3)
     plt.tight_layout()
 
     # Adjust phase plotting similarly
-    ax2.plot(time_us, phase, label='Phase', color='green')
-    ax2.set_xlabel('Time (μs)', fontsize=20)
-    ax2.set_ylabel('Phase (radians)', fontsize=20)
+    ax2.plot(time_us, phase, label="Phase", color="green")
+    ax2.set_xlabel("Time (μs)", fontsize=20)
+    ax2.set_ylabel("Phase (radians)", fontsize=20)
     ax2.legend(fontsize=12)
-    ax2.tick_params(axis='both', labelsize=20)
+    ax2.tick_params(axis="both", labelsize=20)
     plt.tight_layout()
 
     return t_start_detected_iq, amplitude, phase, fig_iq

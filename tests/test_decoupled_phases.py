@@ -12,7 +12,9 @@ def test_velocity_only_no_spall(valid_inputs):
     inputs["spall_calculation"] = "no"
 
     results = alpss_main(**inputs)
-    assert results is not None, "alpss_main should return results even with spall_calculation='no'"
+    assert (
+        results is not None
+    ), "alpss_main should return results even with spall_calculation='no'"
     assert isinstance(results[0], Figure)
     result_dict = results[1]["results"][0]
     assert not np.isnan(result_dict["Carrier Frequency"])
@@ -25,10 +27,15 @@ def test_analysis_failure_returns_nan_defaults(valid_inputs):
     """Test that analysis failure produces NaN defaults but still returns results."""
     inputs = copy.deepcopy(valid_inputs)
 
-    with patch("alpss.alpss_main.spall_analysis", side_effect=RuntimeError("simulated analysis failure")):
+    with patch(
+        "alpss.alpss_main.spall_analysis",
+        side_effect=RuntimeError("simulated analysis failure"),
+    ):
         results = alpss_main(**inputs)
 
-    assert results is not None, "alpss_main should return results even when analysis fails"
+    assert (
+        results is not None
+    ), "alpss_main should return results even when analysis fails"
     assert isinstance(results[0], Figure)
     result_dict = results[1]["results"][0]
     # Velocity-derived values should still be valid
@@ -45,5 +52,8 @@ def test_velocity_failure_raises(valid_inputs):
     inputs = copy.deepcopy(valid_inputs)
 
     with pytest.raises(RuntimeError, match="simulated data failure"):
-        with patch("alpss.alpss_main.extract_data", side_effect=RuntimeError("simulated data failure")):
+        with patch(
+            "alpss.utils.phases.extract_data",
+            side_effect=RuntimeError("simulated data failure"),
+        ):
             alpss_main(**inputs)

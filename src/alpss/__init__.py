@@ -15,4 +15,4 @@ from alpss.analysis.full_uncertainty import full_uncertainty_analysis
 from alpss.analysis.instantaneous_uncertainty import instantaneous_uncertainty_analysis
 from alpss.plotting.plots import plot_results, plot_voltage
 from alpss.io.saving import save
-from alpss.utils import extract_data, stft
+from alpss.utils.helpers import extract_data, stft

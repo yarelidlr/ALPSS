@@ -1,75 +1,24 @@
 import os
-from alpss.detection.spall_doi_finder import spall_doi_finder
 from alpss.plotting.plots import plot_results, plot_voltage
 from alpss.plotting.hel import plot_hel_detection
-from alpss.carrier.frequency import carrier_frequency
-from alpss.carrier.filter import carrier_filter
-from alpss.velocity.calculation import velocity_calculation
 from alpss.validation import validate_inputs
 from alpss.analysis.spall import spall_analysis
 from alpss.analysis.full_uncertainty import full_uncertainty_analysis
-from alpss.analysis.instantaneous_uncertainty import instantaneous_uncertainty_analysis
 from alpss.analysis.hel import hel_detection
-from alpss.utils import extract_data
 from alpss.io.saving import save
+from alpss.utils.phases import run_velocity_phase
+from alpss.utils.defaults import (
+    default_spall_output,
+    default_uncertainty_output,
+    default_hel_output,
+)
+from alpss.utils.logging import setup_alpss_logger
 from datetime import datetime
 import traceback
-import logging
 import numpy as np
 
 
-def setup_alpss_logger():
-    logger = logging.getLogger("alpss")
-
-    if not logger.handlers:  # no handlers = nothing configured yet
-        # Standalone mode → set up a default
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-        logger.propagate = (
-            False  # prevent duplicate output via root logger (e.g. in Jupyter)
-        )
-
-    # Otherwise (if processor already set things up) → just use its config
-    return logger
-
-
 logger = setup_alpss_logger()
-
-
-def _default_spall_output():
-    """Return NaN-filled spall analysis output for graceful degradation."""
-    return {
-        "t_max_comp": np.nan,
-        "t_max_ten": np.nan,
-        "t_rc": np.nan,
-        "v_max_comp": np.nan,
-        "v_max_ten": np.nan,
-        "v_rc": np.nan,
-        "spall_strength_est": np.nan,
-        "strain_rate_est": np.nan,
-        "peak_velocity_freq_uncert": np.nan,
-        "peak_velocity_vel_uncert": np.nan,
-        "max_ten_freq_uncert": np.nan,
-        "max_ten_vel_uncert": np.nan,
-    }
-
-
-def _default_uncertainty_output():
-    """Return NaN-filled uncertainty output for graceful degradation."""
-    return {"spall_uncert": np.nan, "strain_rate_uncert": np.nan}
-
-
-def _default_hel_output():
-    """Return a failed HEL result for graceful degradation."""
-    from alpss.analysis.hel import HELResult
-
-    return HELResult(ok=False)
 
 
 # main function to link together all the sub-functions
@@ -79,67 +28,29 @@ def alpss_main(**inputs):
 
     # --- Phase 1: Velocity Processing ---
     try:
-        start_time = datetime.now()
-        data = extract_data(inputs)
-        logger.info(
-            "Signal: %s | %d samples | %.2f GS/s | window %.1f–%.1f µs (%.1f µs duration)",
-            os.path.basename(inputs.get("filepath", "")),
-            len(data),
-            inputs.get("sample_rate", 0) / 1e9,
-            inputs.get("time_to_skip", 0) / 1e-6,
-            (inputs.get("time_to_skip", 0) + inputs.get("time_to_take", 0)) / 1e-6,
-            inputs.get("time_to_take", 0) / 1e-6,
-        )
-
-        # function to find the spall signal domain of interest
-        logger.info("Finding spall domain of interest...")
-        sdf_out = spall_doi_finder(data, **inputs)
-        logger.info(
-            "Spall DOI found: start=%.3e s, end=%.3e s",
-            sdf_out["t_doi_start"],
-            sdf_out["t_doi_end"],
-        )
-
-        # function to find the carrier frequency
-        logger.info("Estimating carrier frequency...")
-        cen = carrier_frequency(sdf_out, **inputs)
-        logger.info("Carrier frequency: %.6e Hz", cen)
-
-        # function to filter out the carrier frequency after the signal has started
-        logger.info("Filtering carrier frequency...")
-        cf_out = carrier_filter(sdf_out, cen, **inputs)
-        logger.info("Carrier filter applied")
-
-        # function to calculate the velocity from the filtered voltage signal
-        logger.info("Calculating velocity...")
-        vc_out = velocity_calculation(sdf_out, cen, cf_out, **inputs)
-        logger.info("Velocity calculated (%d points)", len(vc_out["time_f"]))
-
-        # function to estimate the instantaneous uncertainty for all points in time
-        logger.info("Computing instantaneous uncertainty...")
-        iua_out = instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs)
-        logger.info("Uncertainty computed")
-
-        # end the velocity processing timer
-        end_time = datetime.now()
-        logger.info("Velocity processing complete in %s", end_time - start_time)
-
+        vel = run_velocity_phase(**inputs)
     except Exception as e:
         logger.error("Error in velocity processing: %s", str(e))
         logger.error("Traceback: %s", traceback.format_exc())
-        # Try to save a fallback voltage plot for diagnostics
         try:
-            logger.info("Attempting a fallback visualization of the voltage signal...")
-            plot_voltage(data, **inputs)
-            logger.info("Fallback voltage plot saved.")
+            from alpss.utils.helpers import extract_data
+
+            plot_voltage(extract_data(inputs), **inputs)
         except Exception:
-            logger.error("Fallback visualization also failed.")
-        # Re-raise so the caller can track this as a failure
+            logger.error("Fallback voltage plot also failed.")
         raise
+
+    sdf_out = vel["sdf_out"]
+    cen = vel["cen"]
+    cf_out = vel["cf_out"]
+    vc_out = vel["vc_out"]
+    iua_out = vel["iua_out"]
+    start_time = vel["start_time"]
+    end_time = vel["end_time"]
 
     # --- Phase 2a: Spall analysis ---
     errors = []
-    sa_out = _default_spall_output()
+    sa_out = default_spall_output()
     spall_ok = False
     try:
         logger.info("Running spall analysis...")
@@ -157,7 +68,7 @@ def alpss_main(**inputs):
         logger.info("Continuing without spall analysis.")
 
     # --- Phase 2b: Full uncertainty analysis ---
-    fua_out = _default_uncertainty_output()
+    fua_out = default_uncertainty_output()
     uncertainty_ok = False
     if not spall_ok:
         logger.info("Skipping uncertainty analysis: spall analysis did not succeed.")
@@ -179,7 +90,7 @@ def alpss_main(**inputs):
             logger.info("Continuing without uncertainty analysis.")
 
     # --- Phase 2c: HEL detection (optional) ---
-    hel_out = _default_hel_output()
+    hel_out = default_hel_output()
     hel_enabled = inputs.get("hel_detection_enabled", False)
     if hel_enabled:
         try:

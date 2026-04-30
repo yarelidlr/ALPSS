@@ -4,16 +4,15 @@ from alpss.alpss_main import alpss_main
 import matplotlib.pyplot as plt
 
 
-# Test for valid inputs and outputs, assuming the function runs correctly
 def test_alpss_main_success(valid_inputs):
-    with patch("alpss.alpss_main.spall_doi_finder") as mock_spall_doi_finder, patch(
-        "alpss.alpss_main.carrier_frequency"
+    with patch("alpss.utils.phases.spall_doi_finder") as mock_spall_doi_finder, patch(
+        "alpss.utils.phases.carrier_frequency"
     ) as mock_carrier_frequency, patch(
-        "alpss.alpss_main.carrier_filter"
+        "alpss.utils.phases.carrier_filter"
     ) as mock_carrier_filter, patch(
-        "alpss.alpss_main.velocity_calculation"
+        "alpss.utils.phases.velocity_calculation"
     ) as mock_velocity_calculation, patch(
-        "alpss.alpss_main.instantaneous_uncertainty_analysis"
+        "alpss.utils.phases.instantaneous_uncertainty_analysis"
     ) as mock_iua, patch(
         "alpss.alpss_main.spall_analysis"
     ) as mock_spall_analysis, patch(
@@ -27,7 +26,6 @@ def test_alpss_main_success(valid_inputs):
         mock_plotting.return_value = plt.Figure()
         mock_saving.return_value = dict()
 
-        # Call the function
         result = alpss_main(**valid_inputs)
 
         assert isinstance(result[0], plt.Figure)
