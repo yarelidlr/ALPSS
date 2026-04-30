@@ -21,38 +21,10 @@ from __future__ import annotations
 import numpy as np
 from scipy.ndimage import uniform_filter1d
 from scipy.stats import linregress
-from dataclasses import dataclass, field
 import logging
+from alpss.utils.results import HELResult
 
 logger = logging.getLogger("alpss")
-
-
-@dataclass
-class HELResult:
-    """Result of Hugoniot Elastic Limit detection."""
-
-    ok: bool
-    strength_gpa: float = np.nan
-    uncertainty_gpa: float = np.nan
-    free_surface_velocity: float = np.nan
-    time_detection_ns: float = np.nan
-    consecutive_points: int = 0
-    segment_duration_ns: float = np.nan
-    strain_rate: float = np.nan
-    error_message: str | None = None
-    # Internal data for plotting (gradient method)
-    segment_start_idx: int | None = None
-    segment_end_idx: int | None = None
-    time_window: np.ndarray | None = None
-    velocity_window: np.ndarray | None = None
-    gradient_smooth: np.ndarray | None = None
-    angles_deg: np.ndarray | None = None
-    # Extra fields populated by the RDP + Linear Hybrid method
-    method: str = "gradient"
-    rise_slope: float = np.nan       # [m/s per ns] slope of the rise segment
-    plateau_slope: float = np.nan    # [m/s per ns] slope of the plateau segment
-    rdp_knee_time_ns: float = np.nan # time of the RDP knee point [ns]
-    rdp_points: np.ndarray | None = None  # simplified vertices for visualisation
 
 
 def elastic_shock_strain_rate(C_L, U_hel, U_0, t_hel, t_0):
@@ -154,7 +126,9 @@ def hel_detection(
     # Delegate to RDP + Linear Hybrid when requested
     if method == "rdp_linear":
         return hel_detection_rdp_hybrid(
-            time_ns, velocity, uncertainty,
+            time_ns,
+            velocity,
+            uncertainty,
             hel_start_ns=hel_start_ns,
             hel_end_ns=hel_end_ns,
             min_velocity=min_velocity,
@@ -333,6 +307,7 @@ def hel_detection(
 # RDP + Linear Hybrid HEL detection (HELIX Toolbox v2 algorithm)
 # ---------------------------------------------------------------------------
 
+
 def _rdp_hel(points: np.ndarray, epsilon: float) -> np.ndarray:
     """RDP simplification returning kept indices (shared with spall module)."""
     if len(points) < 3:
@@ -446,7 +421,9 @@ def hel_detection_rdp_hybrid(
     # ------------------------------------------------------------------ #
     valid = ~np.isnan(velocity)
     if valid.sum() <= 5:
-        return HELResult(ok=False, error_message="insufficient valid data for HEL (RDP method)")
+        return HELResult(
+            ok=False, error_message="insufficient valid data for HEL (RDP method)"
+        )
 
     t_c = time_ns[valid]
     v_c = velocity[valid]
@@ -466,8 +443,11 @@ def hel_detection_rdp_hybrid(
 
     t_w, v_w, u_w = t_c[win], v_c[win], u_c[win]
     if len(t_w) < 10:
-        return HELResult(ok=False, method="rdp_linear",
-                         error_message="insufficient data in HEL window (RDP method)")
+        return HELResult(
+            ok=False,
+            method="rdp_linear",
+            error_message="insufficient data in HEL window (RDP method)",
+        )
 
     # ------------------------------------------------------------------ #
     # 3  RDP simplification                                                 #
@@ -477,8 +457,11 @@ def hel_detection_rdp_hybrid(
     rdp_pts = pts[rdp_idx]
 
     if len(rdp_pts) < 3:
-        return HELResult(ok=False, method="rdp_linear",
-                         error_message="RDP produced fewer than 3 vertices — trace too smooth")
+        return HELResult(
+            ok=False,
+            method="rdp_linear",
+            error_message="RDP produced fewer than 3 vertices — trace too smooth",
+        )
 
     # ------------------------------------------------------------------ #
     # 4  Candidate knee scan                                                #
@@ -573,9 +556,13 @@ def hel_detection_rdp_hybrid(
     # ------------------------------------------------------------------ #
     # 5  Fall back to gradient method                                       #
     # ------------------------------------------------------------------ #
-    logger.info("[RDP-Linear] No valid HEL knee found — falling back to gradient method")
+    logger.info(
+        "[RDP-Linear] No valid HEL knee found — falling back to gradient method"
+    )
     result = hel_detection(
-        time_ns, velocity, uncertainty,
+        time_ns,
+        velocity,
+        uncertainty,
         hel_start_ns=hel_start_ns,
         hel_end_ns=hel_end_ns,
         min_velocity=min_velocity,
@@ -584,7 +571,13 @@ def hel_detection_rdp_hybrid(
         C_L=C_L,
         method="gradient",
     )
-    if not result.ok and result.error_message and "rdp" not in result.error_message.lower():
-        result.error_message = "RDP+Linear: no valid knee; gradient fallback: " + (result.error_message or "no plateau")
+    if (
+        not result.ok
+        and result.error_message
+        and "rdp" not in result.error_message.lower()
+    ):
+        result.error_message = "RDP+Linear: no valid knee; gradient fallback: " + (
+            result.error_message or "no plateau"
+        )
     result.method = "gradient_fallback"
     return result
