@@ -57,6 +57,20 @@ def save(
         inputs_df.to_csv(inputs_path, index=True, header=False)
         inputs_assets.append(inputs_path)
 
+    # save the displacement vs time history
+    displacement_data = np.stack(
+        (vc_out["time_f"], vc_out["displacement_f"]), axis=1
+    )
+    displacement_assets = [displacement_data]
+    if inputs["save_data"]:
+        displacement_path = f"{fname}-displacement.csv"
+        np.savetxt(
+            displacement_path,
+            displacement_data,
+            delimiter=",",
+        )
+        displacement_assets.append(displacement_path)
+
     # save the noisy velocity trace
     velocity_data = np.stack((vc_out["time_f"], vc_out["velocity_f"]), axis=1)
     velocity_assets = [velocity_data]
@@ -216,6 +230,7 @@ def save(
     return {
         "figure": fig_assets,
         "inputs": inputs_assets,
+        "displacement": displacement_assets,
         "velocity": velocity_assets,
         "smooth_velocity": smooth_velocity_assets,
         "voltage": voltage_assets,
