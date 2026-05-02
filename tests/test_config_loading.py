@@ -1,7 +1,8 @@
 import json
 import os
 import pytest
-from alpss.commands import _flatten_config, load_json_config
+from alpss.utils.config import flatten_config as _flatten_config
+from alpss.commands import load_json_config
 
 
 # --- _flatten_config ---

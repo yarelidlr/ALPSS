@@ -11,7 +11,7 @@ from conftest import EXPECTED_VALUES_MAP
 
 def test_alpss_main_wo_configfile(valid_inputs, expected_values):
     # Call the function with valid inputs
-    logging.info(f"Running test in spall doi mode {valid_inputs['start_time_user']} and carrier filter {valid_inputs['carrier_filter_type']}...")
+    logging.info(f"Running test in spall doi mode {valid_inputs['start_time']['start_time_user']} and carrier filter {valid_inputs['carrier']['carrier_filter_type']}...")
     results = alpss_main(**valid_inputs)
     # Extract the results dictionary (results[1] should be the output dictionary)
     result_dict = results[1]
@@ -53,8 +53,8 @@ def test_alpss_main_with_configfile(config_file_path, expected_values):
 def test_alpss_exact_values(valid_inputs, start_time_user, carrier_filter_type):
     """Test exact repeatability for key configurations."""
     inputs = copy.deepcopy(valid_inputs)
-    inputs["start_time_user"] = start_time_user
-    inputs["carrier_filter_type"] = carrier_filter_type
+    inputs["start_time"]["start_time_user"] = start_time_user
+    inputs["carrier"]["carrier_filter_type"] = carrier_filter_type
 
     logging.info(
         "Running exact value test: start=%s, filter=%s",
@@ -79,8 +79,8 @@ def test_alpss_exact_values(valid_inputs, start_time_user, carrier_filter_type):
 def test_alpss_smoke(valid_inputs, start_time_user, carrier_filter_type):
     """Smoke test: mode/filter combos complete without error and return valid results."""
     inputs = copy.deepcopy(valid_inputs)
-    inputs["start_time_user"] = start_time_user
-    inputs["carrier_filter_type"] = carrier_filter_type
+    inputs["start_time"]["start_time_user"] = start_time_user
+    inputs["carrier"]["carrier_filter_type"] = carrier_filter_type
 
     logging.info(
         "Running smoke test: start=%s, filter=%s",
