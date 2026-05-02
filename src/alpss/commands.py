@@ -11,14 +11,45 @@ def start_watcher():
     w = Watcher()
     w.run()
 
+_SECTIONS = {
+    "io", "stft", "start_time", "carrier", "velocity",
+    "material", "spall", "hel", "uncertainty", "plotting",
+}
+
+
+def _flatten_config(config: dict) -> dict:
+    """Flatten a nested section-based config into a single flat dict.
+
+    Raises ValueError if the JSON config is flat (no recognised section keys).
+    """
+    has_sections = any(k in _SECTIONS for k in config)
+    if not has_sections:
+        raise ValueError(
+            f"Config file must use nested sections. "
+            f"Expected top-level keys from: {sorted(_SECTIONS)}. "
+            f"Got: {sorted(config.keys())}"
+        )
+    flat = {}
+    for key, value in config.items():
+        if key in _SECTIONS and isinstance(value, dict):
+            flat.update(value)
+        else:
+            flat[key] = value
+    return flat
+
+
 def load_json_config(config):
-    """Load configuration from a JSON file or return directly if it's already a dictionary."""
+    """Load configuration from a JSON file.
+
+    Accepts a file path (str) or a pre-built flat dict (programmatic use).
+    JSON files must use the nested section format; flat dicts are passed through.
+    """
     if isinstance(config, dict):
-        return config  # If already a dictionary, return it
+        return config  # programmatic use — trust the caller
 
     if isinstance(config, str) and os.path.exists(config):
         with open(config, "r") as file:
-            return json.load(file)  # Load JSON directly
+            return _flatten_config(json.load(file))
 
     raise ValueError(
         "Invalid config input: Provide a dictionary or a valid JSON file path."
