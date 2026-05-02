@@ -216,7 +216,7 @@ def hel_detection(
     # Step 5: Extract HEL properties from earliest plateau
     if seg_start is None or seg_end is None:
         msg = "no qualifying HEL plateau found"
-        logger.info(msg)
+        logger.error(msg)
         return HELResult(
             ok=False,
             error_message=msg,
@@ -239,7 +239,7 @@ def hel_detection(
     # Step 6: Validate minimum velocity
     if abs(fsv) < min_velocity:
         msg = f"rejected - HEL detected velocity < threshold {min_velocity:.1f} m/s"
-        logger.info(msg)
+        logger.error(msg)
         return HELResult(
             ok=False,
             error_message=msg,
@@ -531,14 +531,14 @@ def hel_detection_rdp_hybrid(
             method="rdp_linear",
             strength_gpa=strength_gpa,
             uncertainty_gpa=unc_gpa,
-            free_surface_velocity=fsv,  #Note: this is specifically fsv at "knee" or hel
+            free_surface_velocity=fsv,  # Note: this is specifically fsv at "knee" or hel
             time_detection_ns=knee_t,
             consecutive_points=int(plat_mask.sum()),
             segment_duration_ns=plat_duration,
             strain_rate=sr,
             rise_slope=float(r_slope),
             plateau_slope=float(p_slope),
-            rdp_knee_time_ns=knee_t,  #Note: duplicate variable
+            rdp_knee_time_ns=knee_t,  # Note: duplicate variable
             rdp_points=rdp_pts,
             time_window=t_w,
             velocity_window=v_w,
@@ -555,36 +555,10 @@ def hel_detection_rdp_hybrid(
         )
         return best
 
-    # ------------------------------------------------------------------ #
-    # 5  Fall back to gradient method                                       #
-    # ------------------------------------------------------------------ #
-    logger.info(
-        "[RDP-Linear] No valid HEL knee found"
+    error_msg = "[RDP-Linear] No valid HEL knee found"
+    logger.info(error_msg)
+    return HELResult(
+        ok=False,
+        method="rdp_linear",
+        error_message=error_msg,
     )
-    # result = hel_detection(
-    #     time_ns,
-    #     velocity,
-    #     uncertainty,
-    #     hel_start_ns=hel_start_ns,
-    #     hel_end_ns=hel_end_ns,
-    #     angle_threshold_deg=angle_threshold_deg,
-    #     min_points=min_points,
-    #     min_velocity=min_velocity,
-    #     density=density,
-    #     acoustic_velocity=acoustic_velocity,
-    #     C_L=C_L,
-    #     hel_rdp_epsilon=rdp_epsilon,
-    #     hel_slope_drop_ratio=slope_drop_ratio,
-    #     hel_min_plateau_duration=min_plateau_duration_ns,
-    #     method="gradient",
-    # )
-    # if (
-    #     not result.ok
-    #     and result.error_message
-    #     and "rdp" not in result.error_message.lower()
-    # ):
-    #     result.error_message = "RDP+Linear: no valid knee; gradient fallback: " + (
-    #         result.error_message or "no plateau"
-    #     )
-    # result.method = "gradient_fallback"
-    # return result
