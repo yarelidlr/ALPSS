@@ -57,7 +57,7 @@ def load_json_config(config):
     JSON files must use the nested section format; flat dicts are passed through.
     """
     if isinstance(config, dict):
-        return config  # programmatic use — trust the caller
+        return _flatten_config(config)
 
     if isinstance(config, str) and os.path.exists(config):
         with open(config, "r") as file:
