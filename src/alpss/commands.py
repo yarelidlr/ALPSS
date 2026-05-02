@@ -4,25 +4,21 @@ from alpss.alpss_watcher import Watcher
 from alpss.alpss_main import alpss_main
 import os
 import json
+import logging
 import sys
-
 
 def start_watcher():
     w = Watcher()
     w.run()
 
 def load_json_config(config):
-    """Load configuration from a JSON file or dict.
-
-    Returns the raw nested dict — no flattening. Flattening and validation
-    happen inside alpss_main via flatten_config.
-    """
+    """Load configuration from a JSON file or return directly if it's already a dictionary."""
     if isinstance(config, dict):
-        return config
+        return config  # If already a dictionary, return it
 
     if isinstance(config, str) and os.path.exists(config):
         with open(config, "r") as file:
-            return json.load(file)
+            return json.load(file)  # Load JSON directly
 
     raise ValueError(
         "Invalid config input: Provide a dictionary or a valid JSON file path."
