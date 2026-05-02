@@ -30,11 +30,17 @@ def _flatten_config(config: dict) -> dict:
             f"Got: {sorted(config.keys())}"
         )
     flat = {}
-    for key, value in config.items():
-        if key in _SECTIONS and isinstance(value, dict):
+    for section, value in config.items():
+        if section in _SECTIONS and isinstance(value, dict):
+            clashes = [k for k in value if k in flat]
+            if clashes:
+                raise ValueError(
+                    f"Config key collision in section '{section}': "
+                    f"{clashes} already defined in a previous section."
+                )
             flat.update(value)
         else:
-            flat[key] = value
+            flat[section] = value
     return flat
 
 
