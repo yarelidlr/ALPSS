@@ -12,8 +12,6 @@ def carrier_filter(sdf_out, cen, **inputs):
     voltage = sdf_out["voltage"]
     t_start_corrected = sdf_out["t_start_corrected"]
     fs = sdf_out["fs"]
-    order = inputs["order"]
-    wid = inputs["wid"]
     f_min = inputs["freq_min"]
     f_max = inputs["freq_max"]
     t_doi_start = sdf_out["t_doi_start"]
@@ -24,6 +22,8 @@ def carrier_filter(sdf_out, cen, **inputs):
 
     # choose a filter type (currently gaussian notch and sine fit subtraction)
     if inputs["carrier_filter_type"] == "gaussian_notch":
+        order = inputs["order"]
+        wid = inputs["wid"]
         # filter the data after the signal start time with a gaussian notch
         freq = fftshift(
             np.arange(-len(time[sig_start_idx:]) / 2, len(time[sig_start_idx:]) / 2)
@@ -48,6 +48,7 @@ def carrier_filter(sdf_out, cen, **inputs):
         display_vals = "none"
 
     elif inputs["carrier_filter_type"] == "sin_fit_subtract":
+        wid = inputs["wid"]
         t_fit_begin = inputs["t_fit_begin"]
         t_fit_end = inputs["t_fit_end"]
         all_freq = fftfreq(voltage.size, 1 / fs)
