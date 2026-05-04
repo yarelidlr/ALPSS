@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger("alpss")
+
 _ALWAYS_REQUIRED = [
     "filepath", "out_files_dir", "header_lines",
     "time_to_skip", "time_to_take", "t_before", "t_after",
@@ -42,6 +46,10 @@ def validate_inputs(inputs):
             missing = [k for k in required_keys if k not in inputs]
             if missing:
                 raise ValueError(f"{param}='{value}' requires: {missing}")
+
+    for key in _OPTIONAL:
+        if key not in inputs:
+            logger.warning("Optional param '%s' not provided", key)
 
     if inputs["t_after"] > inputs["time_to_take"]:
         raise ValueError("'t_after' must be less than 'time_to_take'.")
