@@ -139,3 +139,29 @@ def test_present_optional_C_L_no_warning(flat_inputs, caplog):
     with caplog.at_level(logging.WARNING, logger="alpss"):
         validate_inputs(inputs)
     assert "C_L" not in caplog.text
+
+
+# --- unknown params ---
+
+
+def test_unknown_param_raises(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["totally_made_up_param"] = 42
+    with pytest.raises(ValueError, match="Unknown config params"):
+        validate_inputs(inputs)
+
+
+def test_multiple_unknown_params_raises(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["foo"] = 1
+    inputs["bar"] = 2
+    with pytest.raises(ValueError, match="Unknown config params"):
+        validate_inputs(inputs)
+
+
+def test_mode_specific_params_not_flagged_as_unknown(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["carrier_filter_type"] = "sin_fit_subtract"
+    inputs["t_fit_begin"] = 20
+    inputs["t_fit_end"] = 300
+    validate_inputs(inputs)
