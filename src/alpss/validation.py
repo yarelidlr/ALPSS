@@ -70,6 +70,9 @@ _ALL_KNOWN = (
     | {k for keys in _REQUIRED_BY_MODE.values() for k in keys}
 )
 
+_START_TIME_MODES = {"otsu", "iq", "cusum"}
+_CARRIER_FILTER_TYPES = {"gaussian_notch", "sin_fit_subtract", "none"}
+
 
 def validate_inputs(inputs):
     missing = [k for k in _ALWAYS_REQUIRED if k not in inputs]
@@ -90,6 +93,18 @@ def validate_inputs(inputs):
     unknown = [k for k in inputs if k not in _ALL_KNOWN]
     if unknown:
         raise ValueError(f"Unknown config params: {unknown}")
+
+    stu = inputs["start_time_user"]
+    if not (isinstance(stu, (int, float)) or stu in _START_TIME_MODES):
+        raise ValueError(
+            f"Invalid start_time_user='{stu}'. Must be a float or one of {_START_TIME_MODES}."
+        )
+
+    cft = inputs["carrier_filter_type"]
+    if cft not in _CARRIER_FILTER_TYPES:
+        raise ValueError(
+            f"Invalid carrier_filter_type='{cft}'. Must be one of {_CARRIER_FILTER_TYPES}."
+        )
 
     if inputs["t_after"] > inputs["time_to_take"]:
         raise ValueError("'t_after' must be less than 'time_to_take'.")

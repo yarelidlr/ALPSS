@@ -165,3 +165,52 @@ def test_mode_specific_params_not_flagged_as_unknown(flat_inputs):
     inputs["t_fit_begin"] = 20
     inputs["t_fit_end"] = 300
     validate_inputs(inputs)
+
+
+# --- enum validation ---
+
+
+@pytest.mark.parametrize("mode", ["otsu", "iq", "cusum"])
+def test_valid_start_time_modes(flat_inputs, mode):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["start_time_user"] = mode
+    if mode == "iq":
+        inputs.pop("carrier_band_time", None)
+    elif mode == "cusum":
+        inputs.setdefault("cusum_offset", 5)
+        inputs.setdefault("cusum_threshold", 1000)
+    validate_inputs(inputs)
+
+
+def test_float_start_time_valid(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["start_time_user"] = 7.5e-7
+    inputs.pop("carrier_band_time", None)
+    validate_inputs(inputs)
+
+
+def test_invalid_start_time_user_raises(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["start_time_user"] = "bad_mode"
+    with pytest.raises(ValueError, match="Invalid start_time_user"):
+        validate_inputs(inputs)
+
+
+@pytest.mark.parametrize("cft", ["gaussian_notch", "sin_fit_subtract", "none"])
+def test_valid_carrier_filter_types(flat_inputs, cft):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["carrier_filter_type"] = cft
+    if cft == "sin_fit_subtract":
+        inputs.setdefault("t_fit_begin", 20)
+        inputs.setdefault("t_fit_end", 300)
+    elif cft == "none":
+        inputs.pop("order", None)
+        inputs.pop("wid", None)
+    validate_inputs(inputs)
+
+
+def test_invalid_carrier_filter_type_raises(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["carrier_filter_type"] = "bad_filter"
+    with pytest.raises(ValueError, match="Invalid carrier_filter_type"):
+        validate_inputs(inputs)
