@@ -3,7 +3,7 @@ _ALWAYS_REQUIRED = [
     "time_to_skip", "time_to_take", "t_before", "t_after",
     "start_time_user", "start_time_correction",
     "sample_rate", "nperseg", "noverlap", "nfft", "window",
-    "freq_min", "freq_max", "carrier_band_time",
+    "freq_min", "freq_max",
     "blur_kernel", "blur_sigx", "blur_sigy",
     "carrier_filter_type", "order", "wid",
     "smoothing_window", "smoothing_wid", "smoothing_amp",
@@ -15,13 +15,20 @@ _ALWAYS_REQUIRED = [
     "uncert_mult",
     "cmap", "plot_figsize", "plot_dpi",
     "save_data", "display_plots",
-    "iq_threshold_factor",
     "hel_start_time_ns", "hel_end_time_ns", "hel_angle_threshold_deg",
     "hel_detection_min_points", "minimum_HEL_velocity_expected",
 ]
 
+# Optional keys — not validated but documented here for discoverability.
+# bytestring: raw CSV bytes; alternative to filepath for in-memory data
+# C_L: longitudinal wave speed for HEL strain rate; falls back to C0 if absent
+# material: label string used in plot titles
+_OPTIONAL = ["bytestring", "C_L", "material"]
+
 _REQUIRED_BY_MODE = {
-    "start_time_user=cusum": ["cusum_offset", "cusum_threshold"],
+    "start_time_user=otsu": ["carrier_band_time"],
+    "start_time_user=iq": ["iq_threshold_factor"],
+    "start_time_user=cusum": ["carrier_band_time", "cusum_offset", "cusum_threshold"],
     "carrier_filter_type=sin_fit_subtract": ["t_fit_begin", "t_fit_end"],
 }
 
@@ -30,6 +37,16 @@ def validate_inputs(inputs):
     missing = [k for k in _ALWAYS_REQUIRED if k not in inputs]
     if missing:
         raise ValueError(f"Missing required config keys: {missing}")
+
+    if inputs.get("start_time_user") == "otsu":
+        missing = [k for k in _REQUIRED_BY_MODE["start_time_user=otsu"] if k not in inputs]
+        if missing:
+            raise ValueError(f"start_time_user='otsu' requires: {missing}")
+
+    if inputs.get("start_time_user") == "iq":
+        missing = [k for k in _REQUIRED_BY_MODE["start_time_user=iq"] if k not in inputs]
+        if missing:
+            raise ValueError(f"start_time_user='iq' requires: {missing}")
 
     if inputs.get("start_time_user") == "cusum":
         missing = [k for k in _REQUIRED_BY_MODE["start_time_user=cusum"] if k not in inputs]
