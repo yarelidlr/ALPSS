@@ -16,17 +16,13 @@ _ALWAYS_REQUIRED = [
     "cmap", "plot_figsize", "plot_dpi",
     "save_data", "display_plots",
     "iq_threshold_factor",
+    "hel_start_time_ns", "hel_end_time_ns", "hel_angle_threshold_deg",
+    "hel_detection_min_points", "minimum_HEL_velocity_expected",
 ]
 
 _REQUIRED_BY_MODE = {
     "start_time_user=cusum": ["cusum_offset", "cusum_threshold"],
     "carrier_filter_type=sin_fit_subtract": ["t_fit_begin", "t_fit_end"],
-    "hel_detection_enabled": [
-        "hel_start_time_ns", "hel_end_time_ns", "hel_angle_threshold_deg",
-        "hel_detection_min_points", "minimum_HEL_velocity_expected",
-        "hel_method", "hel_rdp_epsilon", "hel_slope_drop_ratio",
-        "hel_min_plateau_duration",
-    ],
 }
 
 
@@ -44,11 +40,6 @@ def validate_inputs(inputs):
         missing = [k for k in _REQUIRED_BY_MODE["carrier_filter_type=sin_fit_subtract"] if k not in inputs]
         if missing:
             raise ValueError(f"carrier_filter_type='sin_fit_subtract' requires: {missing}")
-
-    if inputs.get("hel_detection_enabled"):
-        missing = [k for k in _REQUIRED_BY_MODE["hel_detection_enabled"] if k not in inputs]
-        if missing:
-            raise ValueError(f"hel_detection_enabled=True requires: {missing}")
 
     if inputs["t_after"] > inputs["time_to_take"]:
         raise ValueError("'t_after' must be less than 'time_to_take'.")

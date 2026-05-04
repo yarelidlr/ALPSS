@@ -81,7 +81,6 @@ def valid_inputs():
             "rc_idx_correction": 0,
         },
         "hel": {
-            "hel_detection_enabled": True,
             "hel_start_time_ns": 0.0,
             "hel_end_time_ns": 30.0,
             "hel_angle_threshold_deg": 45.0,

@@ -90,43 +90,40 @@ def alpss_main(**inputs):
             logger.error("Traceback: %s", traceback.format_exc())
             logger.info("Continuing without uncertainty analysis.")
 
-    # --- Phase 2c: HEL detection (optional) ---
+    # --- Phase 2c: HEL detection ---
     hel_out = default_hel_output()
-    hel_enabled = inputs.get("hel_detection_enabled")
-    if hel_enabled:
-        try:
-            logger.info("Running HEL detection...")
-            # Convert velocity time from seconds to nanoseconds for HEL
-            time_ns = vc_out["time_f"] / 1e-9
-            hel_out = hel_detection(
-                time_ns,
-                vc_out["velocity_f_smooth"],
-                iua_out["vel_uncert"],
-                hel_start_ns=inputs.get("hel_start_time_ns"),
-                hel_end_ns=inputs.get("hel_end_time_ns"),
-                angle_threshold_deg=inputs.get("hel_angle_threshold_deg"),
-                min_points=inputs.get("hel_detection_min_points"),
-                min_velocity=inputs.get("minimum_HEL_velocity_expected"),
-                density=inputs.get("density"),
-                acoustic_velocity=inputs.get("C0"),
-                C_L=inputs.get("C_L"),
+    try:
+        logger.info("Running HEL detection...")
+        time_ns = vc_out["time_f"] / 1e-9
+        hel_out = hel_detection(
+            time_ns,
+            vc_out["velocity_f_smooth"],
+            iua_out["vel_uncert"],
+            hel_start_ns=inputs["hel_start_time_ns"],
+            hel_end_ns=inputs["hel_end_time_ns"],
+            angle_threshold_deg=inputs["hel_angle_threshold_deg"],
+            min_points=inputs["hel_detection_min_points"],
+            min_velocity=inputs["minimum_HEL_velocity_expected"],
+            density=inputs["density"],
+            acoustic_velocity=inputs["C0"],
+            C_L=inputs.get("C_L"),
+        )
+        if hel_out.ok:
+            logger.info(
+                "HEL detected: strength=%.4f GPa, FSV=%.2f m/s, time=%.2f ns",
+                hel_out.strength_gpa,
+                hel_out.free_surface_velocity,
+                hel_out.time_detection_ns,
             )
-            if hel_out.ok:
-                logger.info(
-                    "HEL detected: strength=%.4f GPa, FSV=%.2f m/s, time=%.2f ns",
-                    hel_out.strength_gpa,
-                    hel_out.free_surface_velocity,
-                    hel_out.time_detection_ns,
-                )
-            else:
-                if hel_out.error_message:
-                    errors.append(f"hel: {hel_out.error_message}")
-                logger.info("HEL detection complete: no HEL found")
-        except Exception as e:
-            errors.append(f"hel: {e}")
-            logger.error("Error in HEL detection: %s", str(e))
-            logger.error("Traceback: %s", traceback.format_exc())
-            logger.info("Continuing without HEL results.")
+        else:
+            if hel_out.error_message:
+                errors.append(f"hel: {hel_out.error_message}")
+            logger.info("HEL detection complete: no HEL found")
+    except Exception as e:
+        errors.append(f"hel: {e}")
+        logger.error("Error in HEL detection: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
+        logger.info("Continuing without HEL results.")
 
     # --- Phase 3: Output (plotting + saving) ---
     end_time_final = datetime.now()
@@ -148,7 +145,7 @@ def alpss_main(**inputs):
 
     # Generate HEL diagnostic plot as a separate figure
     hel_fig = None
-    if hel_enabled and hel_out.ok:
+    if hel_out.ok:
         try:
             time_ns = vc_out["time_f"] / 1e-9
             hel_fig = plot_hel_detection(
@@ -186,7 +183,7 @@ def alpss_main(**inputs):
         fig,
         iq_fig=sdf_out.get("iq_fig"),
         hel_fig=hel_fig,
-        hel_out=hel_out if hel_enabled else None,
+        hel_out=hel_out,
         spall_ok=spall_ok,
         uncertainty_ok=uncertainty_ok,
         error_msg="; ".join(errors) if errors else "",
