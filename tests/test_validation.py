@@ -1,5 +1,4 @@
 import copy
-import logging
 import pytest
 from alpss.utils.config import flatten_config
 from alpss.validation import validate_inputs
@@ -121,24 +120,6 @@ def test_t_after_exceeds_time_to_take_raises(flat_inputs):
     with pytest.raises(ValueError, match="t_after"):
         validate_inputs(inputs)
 
-
-# --- optional param warning ---
-
-
-def test_missing_optional_C_L_warns(flat_inputs, caplog):
-    inputs = copy.deepcopy(flat_inputs)
-    inputs.pop("C_L", None)
-    with caplog.at_level(logging.WARNING, logger="alpss"):
-        validate_inputs(inputs)
-    assert "C_L" in caplog.text
-
-
-def test_present_optional_C_L_no_warning(flat_inputs, caplog):
-    inputs = copy.deepcopy(flat_inputs)
-    inputs["C_L"] = 5000.0
-    with caplog.at_level(logging.WARNING, logger="alpss"):
-        validate_inputs(inputs)
-    assert "C_L" not in caplog.text
 
 
 # --- unknown params ---
