@@ -85,10 +85,6 @@ def valid_inputs():
             "hel_angle_threshold_deg": 45.0,
             "hel_detection_min_points": 3,
             "minimum_HEL_velocity_expected": 10.0,
-            "hel_method": "gradient",
-            "hel_rdp_epsilon": 2.0,
-            "hel_slope_drop_ratio": 0.85,
-            "hel_min_plateau_duration": 0.5,
         },
         "uncertainty": {
             "uncert_mult": 100,

@@ -3,27 +3,57 @@ import logging
 logger = logging.getLogger("alpss")
 
 _ALWAYS_REQUIRED = [
-    "filepath", "out_files_dir", "header_lines",
-    "time_to_skip", "time_to_take", "t_before", "t_after",
-    "start_time_user", "start_time_correction",
-    "sample_rate", "nperseg", "noverlap", "nfft", "window",
-    "freq_min", "freq_max",
-    "blur_kernel", "blur_sigx", "blur_sigy",
+    "filepath",
+    "out_files_dir",
+    "header_lines",
+    "time_to_skip",
+    "time_to_take",
+    "t_before",
+    "t_after",
+    "start_time_user",
+    "start_time_correction",
+    "sample_rate",
+    "nperseg",
+    "noverlap",
+    "nfft",
+    "window",
+    "freq_min",
+    "freq_max",
+    "blur_kernel",
+    "blur_sigx",
+    "blur_sigy",
     "carrier_filter_type",
-    "smoothing_window", "smoothing_wid", "smoothing_amp",
-    "smoothing_sigma", "smoothing_mu",
-    "lam", "theta",
-    "C0", "density", "delta_rho", "delta_C0", "delta_lam", "delta_theta",
-    "pb_neighbors", "pb_idx_correction", "rc_neighbors", "rc_idx_correction",
+    "smoothing_window",
+    "smoothing_wid",
+    "smoothing_amp",
+    "smoothing_sigma",
+    "smoothing_mu",
+    "lam",
+    "theta",
+    "C0",
+    "density",
+    "delta_rho",
+    "delta_C0",
+    "delta_lam",
+    "delta_theta",
+    "pb_neighbors",
+    "pb_idx_correction",
+    "rc_neighbors",
+    "rc_idx_correction",
     "uncert_mult",
-    "cmap", "plot_figsize", "plot_dpi",
-    "save_data", "display_plots",
-    "hel_start_time_ns", "hel_end_time_ns", "hel_angle_threshold_deg",
-    "hel_detection_min_points", "minimum_HEL_velocity_expected",
+    "cmap",
+    "plot_figsize",
+    "plot_dpi",
+    "save_data",
+    "display_plots",
+    "hel_start_time_ns",
+    "hel_end_time_ns",
+    "hel_angle_threshold_deg",
+    "hel_detection_min_points",
+    "minimum_HEL_velocity_expected",
 ]
 
-# Optional keys — not validated but documented here for discoverability.
-# C_L: longitudinal wave speed for HEL strain rate; falls back to C0 if absent
+# Optional keys — warning is emitted if absent.
 _OPTIONAL = ["C_L"]
 
 _REQUIRED_BY_MODE = {
@@ -33,6 +63,12 @@ _REQUIRED_BY_MODE = {
     "carrier_filter_type=gaussian_notch": ["order", "wid"],
     "carrier_filter_type=sin_fit_subtract": ["wid", "t_fit_begin", "t_fit_end"],
 }
+
+_ALL_KNOWN = (
+    set(_ALWAYS_REQUIRED)
+    | set(_OPTIONAL)
+    | {k for keys in _REQUIRED_BY_MODE.values() for k in keys}
+)
 
 
 def validate_inputs(inputs):
@@ -50,6 +86,10 @@ def validate_inputs(inputs):
     for key in _OPTIONAL:
         if key not in inputs:
             logger.warning("Optional param '%s' not provided", key)
+
+    unknown = [k for k in inputs if k not in _ALL_KNOWN]
+    if unknown:
+        raise ValueError(f"Unknown config params: {unknown}")
 
     if inputs["t_after"] > inputs["time_to_take"]:
         raise ValueError("'t_after' must be less than 'time_to_take'.")
