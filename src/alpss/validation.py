@@ -10,7 +10,7 @@ _ALWAYS_REQUIRED = [
     "smoothing_sigma", "smoothing_mu",
     "lam", "theta",
     "C0", "density", "delta_rho", "delta_C0", "delta_lam", "delta_theta",
-    "spall_calculation",
+    "pb_neighbors", "pb_idx_correction", "rc_neighbors", "rc_idx_correction",
     "uncert_mult",
     "cmap", "plot_figsize", "plot_dpi",
     "save_data", "display_plots",
@@ -27,7 +27,8 @@ _REQUIRED_BY_MODE = {
     "start_time_user=otsu": ["carrier_band_time"],
     "start_time_user=iq": ["iq_threshold_factor"],
     "start_time_user=cusum": ["carrier_band_time", "cusum_offset", "cusum_threshold"],
-    "carrier_filter_type=sin_fit_subtract": ["t_fit_begin", "t_fit_end"],
+    "carrier_filter_type=gaussian_notch": ["order", "wid"],
+    "carrier_filter_type=sin_fit_subtract": ["wid", "t_fit_begin", "t_fit_end"],
 }
 
 

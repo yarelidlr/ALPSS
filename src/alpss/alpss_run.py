@@ -62,8 +62,6 @@ exp_data_dir:               str; directory from which to read the experimental d
 out_files_dir:              str; directory to save output data to
 display_plots:              str; 'yes' to display the final plots and 'no' to not display them. if save_data='yes'
                                      and and display_plots='no' the plots will be saved but not displayed
-spall_calculation:          str; 'yes' to run the calculations for the spall analysis and 'no' to extract the velocity
-                                  without doing the spall analysis
 plot_figsize:               tuple; figure size for the final plots
 plot_dpi:                   float; dpi for the final plots
 """
@@ -120,7 +118,6 @@ alpss_main(
     # exp_data_dir="/Users/Administrator/Desktop/PDV_DATA",
     # out_files_dir="/Users/Administrator/Desktop/ALPSS_output/custom",
     display_plots="yes",
-    spall_calculation="yes",
     plot_figsize=(30, 10),
     plot_dpi=300,
 )
