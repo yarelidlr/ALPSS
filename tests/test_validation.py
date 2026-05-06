@@ -31,8 +31,6 @@ def test_missing_always_required_raises(flat_inputs):
         "lam",
         "density",
         "uncert_mult",
-        "hel_start_time_ns",
-        "minimum_HEL_velocity_expected",
     ],
 )
 def test_missing_required_key_raises(flat_inputs, key):
@@ -45,13 +43,6 @@ def test_missing_required_key_raises(flat_inputs, key):
 # --- _REQUIRED_BY_MODE: start_time_user ---
 
 
-@pytest.mark.parametrize("missing_key", ["carrier_band_time"])
-def test_otsu_requires_key(flat_inputs, missing_key):
-    inputs = copy.deepcopy(flat_inputs)
-    inputs["start_time_user"] = "otsu"
-    del inputs[missing_key]
-    with pytest.raises(ValueError, match="start_time_user='otsu'"):
-        validate_inputs(inputs)
 
 
 @pytest.mark.parametrize("missing_key", ["iq_threshold_factor"])
@@ -64,7 +55,7 @@ def test_iq_requires_key(flat_inputs, missing_key):
 
 
 @pytest.mark.parametrize(
-    "missing_key", ["carrier_band_time", "cusum_offset", "cusum_threshold"]
+    "missing_key", ["cusum_offset", "cusum_threshold"]
 )
 def test_cusum_requires_key(flat_inputs, missing_key):
     inputs = copy.deepcopy(flat_inputs)
@@ -77,7 +68,6 @@ def test_cusum_requires_key(flat_inputs, missing_key):
 def test_float_start_time_does_not_require_mode_params(flat_inputs):
     inputs = copy.deepcopy(flat_inputs)
     inputs["start_time_user"] = 7.5e-7
-    inputs.pop("carrier_band_time", None)
     inputs.pop("iq_threshold_factor", None)
     validate_inputs(inputs)
 
@@ -108,6 +98,51 @@ def test_none_filter_does_not_require_order_wid(flat_inputs):
     inputs["carrier_filter_type"] = "none"
     inputs.pop("order", None)
     inputs.pop("wid", None)
+    validate_inputs(inputs)
+
+
+# --- _REQUIRED_BY_MODE: spall_calculation ---
+
+
+@pytest.mark.parametrize("missing_key", ["pb_neighbors", "pb_idx_correction", "rc_neighbors", "rc_idx_correction"])
+def test_spall_calculation_requires_key(flat_inputs, missing_key):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["spall_calculation"] = True
+    del inputs[missing_key]
+    with pytest.raises(ValueError, match="spall_calculation='True'"):
+        validate_inputs(inputs)
+
+
+def test_spall_calculation_false_does_not_require_params(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["spall_calculation"] = False
+    inputs.pop("pb_neighbors", None)
+    inputs.pop("pb_idx_correction", None)
+    inputs.pop("rc_neighbors", None)
+    inputs.pop("rc_idx_correction", None)
+    validate_inputs(inputs)
+
+
+# --- _REQUIRED_BY_MODE: hel_calculation ---
+
+
+@pytest.mark.parametrize("missing_key", ["hel_start_time_ns", "hel_end_time_ns", "hel_angle_threshold_deg", "hel_detection_min_points", "minimum_HEL_velocity_expected"])
+def test_hel_calculation_requires_key(flat_inputs, missing_key):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["hel_calculation"] = True
+    del inputs[missing_key]
+    with pytest.raises(ValueError, match="hel_calculation='True'"):
+        validate_inputs(inputs)
+
+
+def test_hel_calculation_false_does_not_require_params(flat_inputs):
+    inputs = copy.deepcopy(flat_inputs)
+    inputs["hel_calculation"] = False
+    inputs.pop("hel_start_time_ns", None)
+    inputs.pop("hel_end_time_ns", None)
+    inputs.pop("hel_angle_threshold_deg", None)
+    inputs.pop("hel_detection_min_points", None)
+    inputs.pop("minimum_HEL_velocity_expected", None)
     validate_inputs(inputs)
 
 
@@ -155,9 +190,7 @@ def test_mode_specific_params_not_flagged_as_unknown(flat_inputs):
 def test_valid_start_time_modes(flat_inputs, mode):
     inputs = copy.deepcopy(flat_inputs)
     inputs["start_time_user"] = mode
-    if mode == "iq":
-        inputs.pop("carrier_band_time", None)
-    elif mode == "cusum":
+    if mode == "cusum":
         inputs.setdefault("cusum_offset", 5)
         inputs.setdefault("cusum_threshold", 1000)
     validate_inputs(inputs)
@@ -166,7 +199,6 @@ def test_valid_start_time_modes(flat_inputs, mode):
 def test_float_start_time_valid(flat_inputs):
     inputs = copy.deepcopy(flat_inputs)
     inputs["start_time_user"] = 7.5e-7
-    inputs.pop("carrier_band_time", None)
     validate_inputs(inputs)
 
 

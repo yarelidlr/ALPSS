@@ -77,7 +77,14 @@ def validate_inputs(inputs):
 
     for mode_key, required_keys in _REQUIRED_BY_MODE.items():
         param, value = mode_key.split("=")
-        if inputs.get(param) == value:
+        # Handle boolean string values ("True"/"False" in the mode key)
+        if value == "True":
+            check_value = True
+        elif value == "False":
+            check_value = False
+        else:
+            check_value = value
+        if inputs.get(param) == check_value:
             missing = [k for k in required_keys if k not in inputs]
             if missing:
                 raise ValueError(f"{param}='{value}' requires: {missing}")
