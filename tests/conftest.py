@@ -25,6 +25,8 @@ def valid_inputs():
             "time_to_take": 1.5e-06,
             "save_data": "yes",
             "display_plots": "no",
+            "spall_calculation": "yes",
+            "hel_calculation": "yes",
         },
         "stft": {
             "sample_rate": 80000000000.0,

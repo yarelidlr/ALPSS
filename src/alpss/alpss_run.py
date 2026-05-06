@@ -9,6 +9,8 @@ Please report any bugs or comments to jdiamo15@jhu.edu
 Key for input variables:
 filename:                   str; filename for the data to run
 save_data:                  str; 'yes' or 'no' to save output data
+spall_calculation:          str; 'yes' or 'no' to perform spall analysis
+hel_calculation:            str; 'yes' or 'no' to perform HEL detection
 start_time_user:            str or float; if 'none' the program will attempt to find the
                                              signal start time automatically. if float then
                                              the program will use that as the signal start time
@@ -74,6 +76,8 @@ import os
 alpss_main(
     filename="example_file.csv",
     save_data="yes",
+    spall_calculation="yes",
+    hel_calculation="yes",
     start_time_user="none",
     header_lines=0,
     time_to_skip=0e-6,

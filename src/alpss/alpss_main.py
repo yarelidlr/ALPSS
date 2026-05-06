@@ -49,24 +49,26 @@ def alpss_main(**inputs):
     start_time = vel["start_time"]
     end_time = vel["end_time"]
 
-    # --- Phase 2a: Spall analysis ---
+    # --- Phase 2a: Spall analysis (optional) ---
     errors = []
     sa_out = default_spall_output()
     spall_ok = False
-    try:
-        logger.info("Running spall analysis...")
-        sa_out = spall_analysis(vc_out, iua_out, **inputs)
-        spall_ok = True
-        logger.info(
-            "Spall analysis complete: spall strength=%.4f, strain rate=%.4e",
-            sa_out["spall_strength_est"],
-            sa_out["strain_rate_est"],
-        )
-    except Exception as e:
-        errors.append(f"spall: {e}")
-        logger.error("Error in spall analysis: %s", str(e))
-        logger.error("Traceback: %s", traceback.format_exc())
-        logger.info("Continuing without spall analysis.")
+    spall_enabled = inputs.get("spall_calculation")
+    if spall_enabled:
+        try:
+            logger.info("Running spall analysis...")
+            sa_out = spall_analysis(vc_out, iua_out, **inputs)
+            spall_ok = True
+            logger.info(
+                "Spall analysis complete: spall strength=%.4f, strain rate=%.4e",
+                sa_out["spall_strength_est"],
+                sa_out["strain_rate_est"],
+            )
+        except Exception as e:
+            errors.append(f"spall: {e}")
+            logger.error("Error in spall analysis: %s", str(e))
+            logger.error("Traceback: %s", traceback.format_exc())
+            logger.info("Continuing without spall analysis.")
 
     # --- Phase 2b: Full uncertainty analysis ---
     fua_out = default_uncertainty_output()
@@ -90,40 +92,43 @@ def alpss_main(**inputs):
             logger.error("Traceback: %s", traceback.format_exc())
             logger.info("Continuing without uncertainty analysis.")
 
-    # --- Phase 2c: HEL detection ---
+    # --- Phase 2c: HEL detection (optional) ---
     hel_out = default_hel_output()
-    try:
-        logger.info("Running HEL detection...")
-        time_ns = vc_out["time_f"] / 1e-9
-        hel_out = hel_detection(
-            time_ns,
-            vc_out["velocity_f_smooth"],
-            iua_out["vel_uncert"],
-            hel_start_ns=inputs["hel_start_time_ns"],
-            hel_end_ns=inputs["hel_end_time_ns"],
-            angle_threshold_deg=inputs["hel_angle_threshold_deg"],
-            min_points=inputs["hel_detection_min_points"],
-            min_velocity=inputs["minimum_HEL_velocity_expected"],
-            density=inputs["density"],
-            acoustic_velocity=inputs["C0"],
-            C_L=inputs.get("C_L"),
-        )
-        if hel_out.ok:
-            logger.info(
-                "HEL detected: strength=%.4f GPa, FSV=%.2f m/s, time=%.2f ns",
-                hel_out.strength_gpa,
-                hel_out.free_surface_velocity,
-                hel_out.time_detection_ns,
+    hel_enabled = inputs.get("hel_calculation")
+    if hel_enabled:
+        try:
+            logger.info("Running HEL detection...")
+            # Convert velocity time from seconds to nanoseconds for HEL
+            time_ns = vc_out["time_f"] / 1e-9
+            hel_out = hel_detection(
+                time_ns,
+                vc_out["velocity_f_smooth"],
+                iua_out["vel_uncert"],
+                hel_start_ns=inputs.get("hel_start_time_ns"),
+                hel_end_ns=inputs.get("hel_end_time_ns"),
+                angle_threshold_deg=inputs.get("hel_angle_threshold_deg"),
+                min_points=inputs.get("hel_detection_min_points"),
+                min_velocity=inputs.get("minimum_HEL_velocity_expected"),
+                density=inputs.get("density"),
+                acoustic_velocity=inputs.get("C0"),
+                C_L=inputs.get("C_L"),
             )
-        else:
-            if hel_out.error_message:
-                errors.append(f"hel: {hel_out.error_message}")
-            logger.info("HEL detection complete: no HEL found")
-    except Exception as e:
-        errors.append(f"hel: {e}")
-        logger.error("Error in HEL detection: %s", str(e))
-        logger.error("Traceback: %s", traceback.format_exc())
-        logger.info("Continuing without HEL results.")
+            if hel_out.ok:
+                logger.info(
+                    "HEL detected: strength=%.4f GPa, FSV=%.2f m/s, time=%.2f ns",
+                    hel_out.strength_gpa,
+                    hel_out.free_surface_velocity,
+                    hel_out.time_detection_ns,
+                )
+            else:
+                if hel_out.error_message:
+                    errors.append(f"hel: {hel_out.error_message}")
+                logger.info("HEL detection complete: no HEL found")
+        except Exception as e:
+            errors.append(f"hel: {e}")
+            logger.error("Error in HEL detection: %s", str(e))
+            logger.error("Traceback: %s", traceback.format_exc())
+            logger.info("Continuing without HEL results.")
 
     # --- Phase 3: Output (plotting + saving) ---
     end_time_final = datetime.now()

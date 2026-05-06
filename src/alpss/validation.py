@@ -54,7 +54,7 @@ _ALWAYS_REQUIRED = [
 ]
 
 # Optional keys — warning is emitted if absent.
-_OPTIONAL = ["C_L"]
+_OPTIONAL = ["C_L", "spall_calculation", "hel_calculation"]
 
 _REQUIRED_BY_MODE = {
     "start_time_user=otsu": ["carrier_band_time"],
