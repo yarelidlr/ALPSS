@@ -8,7 +8,7 @@ Please report any bugs or comments to jdiamo15@jhu.edu
 
 Key for input variables:
 filename:                   str; filename for the data to run
-save_data:                  str; 'yes' or 'no' to save output data
+save_data:                  bool; True to save output data, False to skip
 spall_calculation:          bool; True to perform spall analysis, False to skip
 hel_calculation:            bool; True to perform HEL detection, False to skip
 start_time_user:            str or float; if 'none' the program will attempt to find the
@@ -62,8 +62,8 @@ theta:                      float; angle of incidence of the PDV probe
 delta_theta:                float; uncertainty in the angle of incidence of the PDV probe
 exp_data_dir:               str; directory from which to read the experimental data file
 out_files_dir:              str; directory to save output data to
-display_plots:              str; 'yes' to display the final plots and 'no' to not display them. if save_data='yes'
-                                     and and display_plots='no' the plots will be saved but not displayed
+display_plots:              bool; True to display the final plots, False to skip. if save_data=True
+                                     and display_plots=False the plots will be saved but not displayed
 plot_figsize:               tuple; figure size for the final plots
 plot_dpi:                   float; dpi for the final plots
 """
@@ -76,8 +76,8 @@ import os
 config = {
     "io": {
         "filename": "example_file.csv",
-        "save_data": "yes",
-        "display_plots": "yes",
+        "save_data": True,
+        "display_plots": True,
         "header_lines": 0,
         "time_to_skip": 0e-6,
         "time_to_take": 10e-6,
