@@ -46,6 +46,8 @@ _ALWAYS_REQUIRED = [
     "plot_dpi",
     "save_data",
     "display_plots",
+    "spall_calculation",
+    "hel_calculation",
     "hel_start_time_ns",
     "hel_end_time_ns",
     "hel_angle_threshold_deg",
@@ -54,7 +56,7 @@ _ALWAYS_REQUIRED = [
 ]
 
 # Optional keys — warning is emitted if absent.
-_OPTIONAL = ["C_L", "spall_calculation", "hel_calculation"]
+_OPTIONAL = ["C_L"]
 
 _REQUIRED_BY_MODE = {
     "start_time_user=otsu": ["carrier_band_time"],
