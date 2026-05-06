@@ -23,6 +23,7 @@ _ALWAYS_REQUIRED = [
     "blur_sigx",
     "blur_sigy",
     "carrier_filter_type",
+    "carrier_band_time",
     "smoothing_window",
     "smoothing_wid",
     "smoothing_amp",
@@ -59,9 +60,9 @@ _ALWAYS_REQUIRED = [
 _OPTIONAL = ["C_L"]
 
 _REQUIRED_BY_MODE = {
-    "start_time_user=otsu": ["carrier_band_time"],
+    "start_time_user=otsu": [],
     "start_time_user=iq": ["iq_threshold_factor"],
-    "start_time_user=cusum": ["carrier_band_time", "cusum_offset", "cusum_threshold"],
+    "start_time_user=cusum": ["cusum_offset", "cusum_threshold"],
     "carrier_filter_type=gaussian_notch": ["order", "wid"],
     "carrier_filter_type=sin_fit_subtract": ["wid", "t_fit_begin", "t_fit_end"],
 }
