@@ -45,6 +45,7 @@ def spall_analysis(vc_out, iua_out, **inputs):
         / (time_f[max_ten_idx] - vc_out["t_max_comp"])
     )
     spall_strength_est = 0.5 * density * C0 * pullback_velocity
+    peak_shock_stress = 0.5 * density * C0 * vc_out["v_max_comp"]
 
     # set final variables for the function return
     t_max_ten = time_f[max_ten_idx]
@@ -69,6 +70,7 @@ def spall_analysis(vc_out, iua_out, **inputs):
         "v_rc": v_rc,
         "spall_strength_est": spall_strength_est,
         "strain_rate_est": strain_rate_est,
+        "peak_shock_stress": peak_shock_stress,
         "max_ten_freq_uncert": max_ten_freq_uncert,
         "max_ten_vel_uncert": max_ten_vel_uncert,
     }

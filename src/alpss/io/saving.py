@@ -129,9 +129,7 @@ def save(
         "Spall Strength Uncertainty": fua_out["spall_uncert"],
         "Strain Rate": sa_out["strain_rate_est"],
         "Strain Rate Uncertainty": fua_out["strain_rate_uncert"],
-        "Peak Shock Stress": (
-            0.5 * inputs["density"] * inputs["C0"] * vc_out["v_max_comp"]
-        ),
+        "Peak Shock Stress": sa_out["peak_shock_stress"],
         "Spect Time Res": sdf_out["t_res"],
         "Spect Freq Res": sdf_out["f_res"],
         "Spect Velocity Res": 0.5 * (inputs["lam"] * sdf_out["f_res"]),
