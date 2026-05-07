@@ -28,7 +28,7 @@ def test_analysis_failure_returns_nan_defaults(valid_inputs):
     inputs = copy.deepcopy(valid_inputs)
 
     with patch(
-        "alpss.alpss_main.spall_analysis",
+        "alpss.utils.phases.spall_analysis",
         side_effect=RuntimeError("simulated analysis failure"),
     ):
         results = alpss_main(**inputs)

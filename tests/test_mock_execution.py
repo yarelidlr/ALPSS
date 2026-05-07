@@ -14,13 +14,13 @@ def test_alpss_main_success(valid_inputs):
     ) as mock_velocity_calculation, patch(
         "alpss.utils.phases.instantaneous_uncertainty_analysis"
     ) as mock_iua, patch(
-        "alpss.alpss_main.spall_analysis"
+        "alpss.utils.phases.spall_analysis"
     ) as mock_spall_analysis, patch(
-        "alpss.alpss_main.full_uncertainty_analysis"
+        "alpss.utils.phases.full_uncertainty_analysis"
     ) as mock_fua, patch(
-        "alpss.alpss_main.plot_results"
+        "alpss.utils.phases.plot_results"
     ) as mock_plotting, patch(
-        "alpss.alpss_main.save"
+        "alpss.utils.phases.save"
     ) as mock_saving:
 
         mock_plotting.return_value = plt.Figure()
