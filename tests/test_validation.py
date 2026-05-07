@@ -1,7 +1,7 @@
 import copy
 import pytest
 from alpss.utils.config import flatten_config
-from alpss.validation import validate_inputs
+from alpss.utils.validation import validate_inputs
 
 
 @pytest.fixture
