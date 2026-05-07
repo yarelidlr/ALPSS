@@ -11,7 +11,6 @@ def plot_hel_detection(
     hel_start_ns,
     hel_end_ns,
     angle_threshold_deg=45.0,
-    sample_name="",
     U_0=None,
     t_0=None,
 ):
@@ -32,8 +31,6 @@ def plot_hel_detection(
         End of HEL search window in ns.
     angle_threshold_deg : float
         Angle threshold used for detection.
-    sample_name : str
-        Name of the sample/file for the title.
     U_0 : float or None
         Reference velocity for strain rate slope line.
     t_0 : float or None
@@ -61,7 +58,7 @@ def plot_hel_detection(
     ax1.set_xlabel("Time (ns)", fontsize=12)
     ax1.set_ylabel("Velocity (m/s)", fontsize=12)
     ax1.set_title(
-        f"HEL Detection - {sample_name}",
+        f"HEL Detection",
         fontsize=14,
         fontweight="bold",
     )
@@ -72,15 +69,27 @@ def plot_hel_detection(
     if t_win is not None:
         ax2.plot(t_win, v_win, "b-", linewidth=2, label="Velocity in HEL window")
 
-    if seg_start is not None and seg_end is not None and fsv is not None and np.isfinite(fsv):
+    if (
+        seg_start is not None
+        and seg_end is not None
+        and fsv is not None
+        and np.isfinite(fsv)
+    ):
         plateau_t0 = t_win[seg_start]
         plateau_t1 = t_win[seg_end]
         ax2.axvspan(
-            plateau_t0, plateau_t1, alpha=0.3, color="orange",
+            plateau_t0,
+            plateau_t1,
+            alpha=0.3,
+            color="orange",
             label=f"HEL Plateau ({fsv:.1f} m/s)",
         )
         ax2.axhline(
-            fsv, color="orange", linestyle="--", linewidth=2, alpha=0.8,
+            fsv,
+            color="orange",
+            linestyle="--",
+            linewidth=2,
+            alpha=0.8,
             label=f"Mean Plateau Velocity: {fsv:.1f} m/s",
         )
         ax2.axvline(plateau_t0, color="orange", linestyle=":", linewidth=1.5, alpha=0.7)
@@ -105,17 +114,39 @@ def plot_hel_detection(
         if dt > 0:
             slope = (fsv - U_0) / dt
             ax2.plot(
-                [t_0, t_hel], [U_0, fsv], "r--", linewidth=2, alpha=0.8,
+                [t_0, t_hel],
+                [U_0, fsv],
+                "r--",
+                linewidth=2,
+                alpha=0.8,
                 label=f"Strain Rate Slope: {slope:.2e} m/s/ns",
             )
-            ax2.plot(t_0, U_0, "go", markersize=8, label=f"U\u2080: {U_0:.1f} m/s @ {t_0:.1f} ns", zorder=5)
-            ax2.plot(t_hel, fsv, "ro", markersize=8, label=f"U_HEL: {fsv:.1f} m/s @ {t_hel:.1f} ns", zorder=5)
+            ax2.plot(
+                t_0,
+                U_0,
+                "go",
+                markersize=8,
+                label=f"U\u2080: {U_0:.1f} m/s @ {t_0:.1f} ns",
+                zorder=5,
+            )
+            ax2.plot(
+                t_hel,
+                fsv,
+                "ro",
+                markersize=8,
+                label=f"U_HEL: {fsv:.1f} m/s @ {t_hel:.1f} ns",
+                zorder=5,
+            )
 
     # HEL stress annotation
     if hel_result.ok:
         result_text = f"HEL Strength: {hel_result.strength_gpa:.3f} \u00b1 {hel_result.uncertainty_gpa:.3f} GPa"
         ax2.text(
-            0.02, 0.98, result_text, transform=ax2.transAxes, fontsize=12,
+            0.02,
+            0.98,
+            result_text,
+            transform=ax2.transAxes,
+            fontsize=12,
             verticalalignment="top",
             bbox=dict(boxstyle="round", facecolor="lightgreen", alpha=0.8),
         )
@@ -124,12 +155,17 @@ def plot_hel_detection(
 
     # --- Bottom: Gradient vs time ---
     if gradient is not None and t_win is not None:
-        ax3.plot(t_win, gradient, "g-", linewidth=1.5, alpha=0.6, label="Gradient (dv/dt)")
+        ax3.plot(
+            t_win, gradient, "g-", linewidth=1.5, alpha=0.6, label="Gradient (dv/dt)"
+        )
         ax3.axhline(0, color="black", linestyle="-", linewidth=0.8, alpha=0.5)
 
         if seg_start is not None and seg_end is not None:
             ax3.axvspan(
-                t_win[seg_start], t_win[seg_end], alpha=0.3, color="orange",
+                t_win[seg_start],
+                t_win[seg_end],
+                alpha=0.3,
+                color="orange",
                 label="HEL Plateau Region",
             )
 
@@ -137,10 +173,16 @@ def plot_hel_detection(
         angle_thresh_rad = np.radians(angle_threshold_deg)
         gradient_thresh = np.tan(angle_thresh_rad)
         ax3.axhline(
-            gradient_thresh, color="red", linestyle="--", linewidth=1, alpha=0.7,
+            gradient_thresh,
+            color="red",
+            linestyle="--",
+            linewidth=1,
+            alpha=0.7,
             label=f"Angle Threshold ({angle_threshold_deg}\u00b0)",
         )
-        ax3.axhline(-gradient_thresh, color="red", linestyle="--", linewidth=1, alpha=0.7)
+        ax3.axhline(
+            -gradient_thresh, color="red", linestyle="--", linewidth=1, alpha=0.7
+        )
 
     ax3.set_xlabel("Time (ns)", fontsize=12)
     ax3.set_ylabel("Gradient (m/s per ns)", fontsize=12)

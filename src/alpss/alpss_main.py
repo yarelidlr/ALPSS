@@ -158,7 +158,6 @@ def alpss_main(**inputs):
                 hel_start_ns=inputs["hel_start_time_ns"],
                 hel_end_ns=inputs["hel_end_time_ns"],
                 angle_threshold_deg=inputs["hel_angle_threshold_deg"],
-                sample_name=os.path.basename(inputs.get("filepath", "")),
             )
             if not inputs["display_plots"]:
                 import matplotlib.pyplot as _plt
