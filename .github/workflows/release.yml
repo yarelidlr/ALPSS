@@ -36,7 +36,7 @@ jobs:
       - name: Build and publish to PyPI
         if: env.EXISTS == 'false'
         run: |
-          poetry build
+          POETRY_DYNAMIC_VERSIONING_OVERRIDE=alpss=${{ env.VERSION }} poetry build
           poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
 
       - name: Skip PyPI publish if version exists
