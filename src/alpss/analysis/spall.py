@@ -7,22 +7,18 @@ def spall_analysis(vc_out, iua_out, **inputs):
     # unpack dictionary values in to individual variables
     time_f = vc_out["time_f"]
     velocity_f_smooth = vc_out["velocity_f_smooth"]
+    peak_velocity_idx = vc_out["peak_velocity_idx"]
     pb_neighbors = inputs["pb_neighbors"]
     pb_idx_correction = inputs["pb_idx_correction"]
     rc_neighbors = inputs["rc_neighbors"]
     rc_idx_correction = inputs["rc_idx_correction"]
     C0 = inputs["C0"]
     density = inputs["density"]
-    freq_uncert = iua_out["freq_uncert"]
-    vel_uncert = iua_out["vel_uncert"]
 
-    # get the global peak velocity
-    peak_velocity_idx = np.argmax(velocity_f_smooth)
-    peak_velocity = velocity_f_smooth[peak_velocity_idx]
-
-    # get the uncertainities associated with the peak velocity
-    peak_velocity_freq_uncert = freq_uncert[peak_velocity_idx]
-    peak_velocity_vel_uncert = vel_uncert[peak_velocity_idx]
+    # read the global peak velocity and its uncertainties (now computed in velocity_calculation)
+    peak_velocity = vc_out["v_max_comp"]
+    peak_velocity_freq_uncert = iua_out["peak_velocity_freq_uncert"]
+    peak_velocity_vel_uncert = iua_out["peak_velocity_vel_uncert"]
 
     # attempt to get the fist local minimum after the peak velocity to get the pullback
     # velocity. 'order' is the number of points on each side to compare to.
@@ -50,14 +46,14 @@ def spall_analysis(vc_out, iua_out, **inputs):
     strain_rate_est = (
         (0.5 / C0)
         * pullback_velocity
-        / (time_f[max_ten_idx] - time_f[np.argmax(velocity_f_smooth)])
+        / (time_f[max_ten_idx] - vc_out["t_max_comp"])
     )
     spall_strength_est = 0.5 * density * C0 * pullback_velocity
 
     # set final variables for the function return
-    t_max_comp = time_f[np.argmax(velocity_f_smooth)]
+    t_max_comp = vc_out["t_max_comp"]
     t_max_ten = time_f[max_ten_idx]
-    v_max_comp = peak_velocity
+    v_max_comp = vc_out["v_max_comp"]
     v_max_ten = max_tension_velocity
 
     # get first local maximum after pullback (recompression)
@@ -73,16 +69,12 @@ def spall_analysis(vc_out, iua_out, **inputs):
 
     # return a dictionary of the results
     sa_out = {
-        "t_max_comp": t_max_comp,
         "t_max_ten": t_max_ten,
         "t_rc": t_rc,
-        "v_max_comp": v_max_comp,
         "v_max_ten": v_max_ten,
         "v_rc": v_rc,
         "spall_strength_est": spall_strength_est,
         "strain_rate_est": strain_rate_est,
-        "peak_velocity_freq_uncert": peak_velocity_freq_uncert,
-        "peak_velocity_vel_uncert": peak_velocity_vel_uncert,
         "max_ten_freq_uncert": max_ten_freq_uncert,
         "max_ten_vel_uncert": max_ten_vel_uncert,
     }
