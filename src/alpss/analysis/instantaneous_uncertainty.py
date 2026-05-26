@@ -156,7 +156,6 @@ def instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs):
     vel_uncert = freq_uncert * (lam / 2)
 
     # dictionary to return outputs
-    peak_velocity_idx = vc_out["peak_velocity_idx"]
     iua_out = {
         "time_cut": time_cut,
         "popt": popt,
@@ -171,8 +170,6 @@ def instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs):
         "freq_uncert_scaling": freq_uncert_scaling,
         "freq_uncert": freq_uncert,
         "vel_uncert": vel_uncert,
-        "peak_velocity_freq_uncert": freq_uncert[peak_velocity_idx],
-        "peak_velocity_vel_uncert": vel_uncert[peak_velocity_idx],
     }
 
     return iua_out

@@ -89,7 +89,7 @@ def run_spall_phase(vc_out, iua_out, **inputs) -> tuple:
     return sa_out, spall_ok, error_msg
 
 
-def run_uncertainty_phase(cen, sa_out, iua_out, spall_ok, **inputs) -> tuple:
+def run_uncertainty_phase(cen, vc_out, sa_out, iua_out, spall_ok, **inputs) -> tuple:
     """Phase 2b: Uncertainty analysis. Returns (fua_out, uncertainty_ok, error_msg)."""
     fua_out = default_uncertainty_output()
     uncertainty_ok = False
@@ -101,7 +101,7 @@ def run_uncertainty_phase(cen, sa_out, iua_out, spall_ok, **inputs) -> tuple:
     else:
         try:
             logger.info("Running full uncertainty analysis...")
-            fua_out = full_uncertainty_analysis(cen, sa_out, iua_out, **inputs)
+            fua_out = full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs)
             uncertainty_ok = True
             logger.info(
                 "Uncertainty analysis complete: spall uncertainty=%.4f, strain rate uncertainty=%.4e",
