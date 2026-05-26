@@ -55,6 +55,7 @@ def velocity_calculation(
     time_f = time[time_start_idx:time_end_idx]
 
     # return a dictionary of the outputs
+    peak_velocity_idx = int(np.argmax(velocity_f_smooth))
     vc_out = {
         "time_f": time_f,
         "velocity_f": velocity_f,
@@ -63,6 +64,9 @@ def velocity_calculation(
         "voltage_filt": voltage_filt,
         "time_start_idx": time_start_idx,
         "time_end_idx": time_end_idx,
+        "peak_velocity_idx": peak_velocity_idx,
+        "v_max_comp": velocity_f_smooth[peak_velocity_idx],
+        "t_max_comp": time_f[peak_velocity_idx],
     }
 
     return vc_out
