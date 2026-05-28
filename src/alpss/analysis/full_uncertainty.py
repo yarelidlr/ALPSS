@@ -26,7 +26,7 @@ def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs):
     delta_lam = inputs["delta_lam"]
     theta = inputs["theta"]
     delta_theta = inputs["delta_theta"]
-    delta_freq_tb = sa_out["peak_velocity_freq_uncert"]
+    delta_freq_tb = iua_out["peak_velocity_freq_uncert"]
     delta_freq_td = sa_out["max_ten_freq_uncert"]
     delta_time_c = iua_out["tau"]
     delta_time_d = iua_out["tau"]

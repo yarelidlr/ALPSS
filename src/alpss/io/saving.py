@@ -118,6 +118,8 @@ def save(
         "Run Time": (end_time - start_time),
         "Velocity at Max Compression": vc_out["v_max_comp"],
         "Time at Max Compression": vc_out["t_max_comp"],
+        "Velocity at Max Compression Freq Uncertainty": iua_out["peak_velocity_freq_uncert"],
+        "Velocity at Max Compression Vel Uncertainty": iua_out["peak_velocity_vel_uncert"],
         "Velocity at Max Tension": sa_out["v_max_ten"],
         "Time at Max Tension": sa_out["t_max_ten"],
         "Velocity at Recompression": sa_out["v_rc"],
