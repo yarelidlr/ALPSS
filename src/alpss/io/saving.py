@@ -142,13 +142,13 @@ def save(
         "Velocity at Recompression": sa_out["v_rc"],
         "Time at Recompression": sa_out["t_rc"],
         "Spall Strength": sa_out["spall_strength_est"],
+        "Strain Rate": sa_out["strain_rate_est"],
     })
 
     # Uncertainty phase
     results_to_save.update({
         "Uncertainty OK": uncertainty_ok,
         "Spall Strength Uncertainty": fua_out["spall_uncert"],
-        "Strain Rate": sa_out["strain_rate_est"],
         "Strain Rate Uncertainty": fua_out["strain_rate_uncert"],
     })
 
