@@ -100,22 +100,22 @@ def test_none_filter_does_not_require_order_wid(flat_inputs):
     validate_inputs(inputs)
 
 
-# --- _REQUIRED_BY_MODE: spall_calculation ---
+# --- _REQUIRED_BY_MODE: spall_enabled ---
 
 
 @pytest.mark.parametrize("missing_key", ["pb_neighbors", "pb_idx_correction", "rc_neighbors", "rc_idx_correction", "C0", "density", "delta_rho", "delta_C0", "delta_lam", "delta_theta"])
-def test_spall_calculation_requires_key(flat_inputs, missing_key):
+def test_spall_enabled_requires_key(flat_inputs, missing_key):
     inputs = copy.deepcopy(flat_inputs)
-    inputs["spall_calculation"] = True
+    inputs["spall_enabled"] = True
     del inputs[missing_key]
-    with pytest.raises(ValueError, match="spall_calculation='True'"):
+    with pytest.raises(ValueError, match="spall_enabled='True'"):
         validate_inputs(inputs)
 
 
-def test_spall_calculation_false_does_not_require_params(flat_inputs):
+def test_spall_enabled_false_does_not_require_params(flat_inputs):
     inputs = copy.deepcopy(flat_inputs)
-    inputs["spall_calculation"] = False
-    inputs["hel_calculation"] = False
+    inputs["spall_enabled"] = False
+    inputs["hel_enabled"] = False
     inputs.pop("pb_neighbors", None)
     inputs.pop("pb_idx_correction", None)
     inputs.pop("rc_neighbors", None)
@@ -129,23 +129,23 @@ def test_spall_calculation_false_does_not_require_params(flat_inputs):
     validate_inputs(inputs)
 
 
-# --- _REQUIRED_BY_MODE: hel_calculation ---
+# --- _REQUIRED_BY_MODE: hel_enabled ---
 
 
 @pytest.mark.parametrize("missing_key", ["hel_start_time_ns", "hel_end_time_ns", "hel_angle_threshold_deg", "hel_detection_min_points", "minimum_HEL_velocity_expected", "C_L", "density"])
-def test_hel_calculation_requires_key(flat_inputs, missing_key):
+def test_hel_enabled_requires_key(flat_inputs, missing_key):
     inputs = copy.deepcopy(flat_inputs)
-    inputs["spall_calculation"] = False
-    inputs["hel_calculation"] = True
+    inputs["spall_enabled"] = False
+    inputs["hel_enabled"] = True
     del inputs[missing_key]
-    with pytest.raises(ValueError, match="hel_calculation='True'"):
+    with pytest.raises(ValueError, match="hel_enabled='True'"):
         validate_inputs(inputs)
 
 
-def test_hel_calculation_false_does_not_require_params(flat_inputs):
+def test_hel_enabled_false_does_not_require_params(flat_inputs):
     inputs = copy.deepcopy(flat_inputs)
-    inputs["spall_calculation"] = False
-    inputs["hel_calculation"] = False
+    inputs["spall_enabled"] = False
+    inputs["hel_enabled"] = False
     inputs.pop("hel_start_time_ns", None)
     inputs.pop("hel_end_time_ns", None)
     inputs.pop("hel_angle_threshold_deg", None)
