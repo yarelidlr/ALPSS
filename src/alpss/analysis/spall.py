@@ -54,9 +54,7 @@ def spall_analysis(vc_out, iua_out, **inputs):
     spall_strength_est = 0.5 * density * C0 * pullback_velocity
 
     # set final variables for the function return
-    t_max_comp = vc_out["t_max_comp"]
     t_max_ten = time_f[max_ten_idx]
-    v_max_comp = vc_out["v_max_comp"]
     v_max_ten = max_tension_velocity
 
     # get first local maximum after pullback (recompression)
