@@ -10,6 +10,12 @@ def default_spall_output() -> dict:
     }
 
 
+def default_shock_output() -> dict:
+    return {
+        "peak_shock_stress": np.nan,
+    }
+
+
 def default_uncertainty_output() -> dict:
     return {
         "spall_uncert": np.nan,

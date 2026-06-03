@@ -68,10 +68,4 @@ def velocity_calculation(
     # compute and add velocity peak metrics
     vc_out.update(compute_velocity_peaks(velocity_f_smooth, time_f))
 
-    # compute peak shock stress from peak velocity and material properties if available
-    if "density" in inputs and "C0" in inputs:
-        vc_out["peak_shock_stress"] = 0.5 * inputs["density"] * inputs["C0"] * vc_out["v_max_comp"]
-    else:
-        vc_out["peak_shock_stress"] = np.nan
-
     return vc_out
