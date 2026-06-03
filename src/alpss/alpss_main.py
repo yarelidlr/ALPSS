@@ -5,6 +5,7 @@ from alpss.utils.phases import (
     run_velocity_phase,
     run_spall_phase,
     run_uncertainty_phase,
+    run_shock_phase,
     run_hel_phase,
     run_output_phase,
 )
@@ -59,6 +60,11 @@ def alpss_main(**inputs):
     if hel_error:
         errors.append(hel_error)
 
+    # --- Phase 2d: Shock analysis ---
+    shock_out, shock_error = run_shock_phase(vc_out, **inputs)
+    if shock_error:
+        errors.append(shock_error)
+
     # --- Phase 3: Output (plotting + saving) ---
     end_time_final = datetime.now()
     logger.info(f"\nFull runtime: {end_time_final - start_time}\n")
@@ -71,6 +77,7 @@ def alpss_main(**inputs):
         sa_out,
         iua_out,
         fua_out,
+        shock_out,
         hel_out,
         start_time,
         end_time,
