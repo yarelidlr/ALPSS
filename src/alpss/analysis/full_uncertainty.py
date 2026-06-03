@@ -9,7 +9,7 @@ import numpy as np
 
 
 # program to calculate the uncertainty in the spall strength and strain rate
-def full_uncertainty_analysis(cen, sa_out, iua_out, **inputs):
+def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs):
     """
     Based on the work of Mallick et al.
 
@@ -26,13 +26,18 @@ def full_uncertainty_analysis(cen, sa_out, iua_out, **inputs):
     delta_lam = inputs["delta_lam"]
     theta = inputs["theta"]
     delta_theta = inputs["delta_theta"]
-    delta_freq_tb = sa_out["peak_velocity_freq_uncert"]
+
+    # compute uncertainties at peak velocity point
+    peak_velocity_idx = vc_out["peak_velocity_idx"]
+    peak_velocity_freq_uncert = iua_out["freq_uncert"][peak_velocity_idx]
+    peak_velocity_vel_uncert = iua_out["vel_uncert"][peak_velocity_idx]
+    delta_freq_tb = peak_velocity_freq_uncert
     delta_freq_td = sa_out["max_ten_freq_uncert"]
     delta_time_c = iua_out["tau"]
     delta_time_d = iua_out["tau"]
-    freq_tb = (sa_out["v_max_comp"] * 2) / lam + cen
+    freq_tb = (vc_out["v_max_comp"] * 2) / lam + cen
     freq_td = (sa_out["v_max_ten"] * 2) / lam + cen
-    time_c = sa_out["t_max_comp"]
+    time_c = vc_out["t_max_comp"]
     time_d = sa_out["t_max_ten"]
 
     # assuming time c is the same as time b
@@ -90,6 +95,11 @@ def full_uncertainty_analysis(cen, sa_out, iua_out, **inputs):
     )
 
     # save outputs to a dictionary
-    fua_out = {"spall_uncert": delta_spall, "strain_rate_uncert": delta_strain_rate}
+    fua_out = {
+        "spall_uncert": delta_spall,
+        "strain_rate_uncert": delta_strain_rate,
+        "peak_velocity_freq_uncert": peak_velocity_freq_uncert,
+        "peak_velocity_vel_uncert": peak_velocity_vel_uncert,
+    }
 
     return fua_out

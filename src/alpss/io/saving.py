@@ -116,8 +116,10 @@ def save(
         "Uncertainty OK": uncertainty_ok,
         "Error Message": error_msg,
         "Run Time": (end_time - start_time),
-        "Velocity at Max Compression": sa_out["v_max_comp"],
-        "Time at Max Compression": sa_out["t_max_comp"],
+        "Velocity at Max Compression": vc_out["v_max_comp"],
+        "Time at Max Compression": vc_out["t_max_comp"],
+        "Velocity at Max Compression Freq Uncertainty": fua_out["peak_velocity_freq_uncert"],
+        "Velocity at Max Compression Vel Uncertainty": fua_out["peak_velocity_vel_uncert"],
         "Velocity at Max Tension": sa_out["v_max_ten"],
         "Time at Max Tension": sa_out["t_max_ten"],
         "Velocity at Recompression": sa_out["v_rc"],
@@ -128,7 +130,7 @@ def save(
         "Strain Rate": sa_out["strain_rate_est"],
         "Strain Rate Uncertainty": fua_out["strain_rate_uncert"],
         "Peak Shock Stress": (
-            0.5 * inputs["density"] * inputs["C0"] * sa_out["v_max_comp"]
+            0.5 * inputs["density"] * inputs["C0"] * vc_out["v_max_comp"]
         ),
         "Spect Time Res": sdf_out["t_res"],
         "Spect Freq Res": sdf_out["f_res"],

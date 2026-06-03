@@ -3,16 +3,20 @@ import numpy as np
 
 def default_spall_output() -> dict:
     return {
-        "t_max_comp": np.nan, "t_max_ten": np.nan, "t_rc": np.nan,
-        "v_max_comp": np.nan, "v_max_ten": np.nan, "v_rc": np.nan,
+        "t_max_ten": np.nan, "t_rc": np.nan,
+        "v_max_ten": np.nan, "v_rc": np.nan,
         "spall_strength_est": np.nan, "strain_rate_est": np.nan,
-        "peak_velocity_freq_uncert": np.nan, "peak_velocity_vel_uncert": np.nan,
         "max_ten_freq_uncert": np.nan, "max_ten_vel_uncert": np.nan,
     }
 
 
 def default_uncertainty_output() -> dict:
-    return {"spall_uncert": np.nan, "strain_rate_uncert": np.nan}
+    return {
+        "spall_uncert": np.nan,
+        "strain_rate_uncert": np.nan,
+        "peak_velocity_freq_uncert": np.nan,
+        "peak_velocity_vel_uncert": np.nan,
+    }
 
 
 def default_shock_result() -> dict:

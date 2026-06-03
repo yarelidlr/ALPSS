@@ -3,6 +3,7 @@ from scipy.fft import ifft
 from scipy.fftpack import fftshift
 from alpss.velocity.derivative import *
 from alpss.velocity.smoothing import *
+from alpss.velocity.peak import compute_velocity_peaks
 
 
 # function to calculate the velocity from the filtered voltage signal
@@ -64,5 +65,7 @@ def velocity_calculation(
         "time_start_idx": time_start_idx,
         "time_end_idx": time_end_idx,
     }
+    # compute and add velocity peak metrics
+    vc_out.update(compute_velocity_peaks(velocity_f_smooth, time_f))
 
     return vc_out

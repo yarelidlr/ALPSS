@@ -49,7 +49,7 @@ def alpss_main(**inputs):
 
     # --- Phase 2b: Full uncertainty analysis ---
     fua_out, uncertainty_ok, uncertainty_error = run_uncertainty_phase(
-        cen, sa_out, iua_out, spall_ok, **inputs
+        cen, vc_out, sa_out, iua_out, spall_ok, **inputs
     )
     if uncertainty_error:
         errors.append(uncertainty_error)
