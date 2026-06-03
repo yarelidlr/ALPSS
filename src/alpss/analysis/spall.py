@@ -69,7 +69,6 @@ def spall_analysis(vc_out, iua_out, **inputs):
         "v_rc": v_rc,
         "spall_strength_est": spall_strength_est,
         "strain_rate_est": strain_rate_est,
-        "peak_shock_stress": peak_shock_stress,
         "max_ten_freq_uncert": max_ten_freq_uncert,
         "max_ten_vel_uncert": max_ten_vel_uncert,
     }
