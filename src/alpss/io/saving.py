@@ -125,8 +125,6 @@ def save(
         "Velocity OK": velocity_ok,
         "Velocity at Max Compression": vc_out["v_max_comp"],
         "Time at Max Compression": vc_out["t_max_comp"],
-        "Velocity at Max Compression Freq Uncertainty": fua_out["peak_velocity_freq_uncert"],
-        "Velocity at Max Compression Vel Uncertainty": fua_out["peak_velocity_vel_uncert"],
         "Peak Shock Stress": shock_out["peak_shock_stress"],
         "Carrier Frequency": cen,
     })
@@ -148,6 +146,8 @@ def save(
     # Uncertainty phase
     results_to_save.update({
         "Uncertainty OK": uncertainty_ok,
+        "Velocity at Max Compression Freq Uncertainty": fua_out["peak_velocity_freq_uncert"],
+        "Velocity at Max Compression Vel Uncertainty": fua_out["peak_velocity_vel_uncert"],
         "Spall Strength Uncertainty": fua_out["spall_uncert"],
         "Strain Rate Uncertainty": fua_out["strain_rate_uncert"],
     })
