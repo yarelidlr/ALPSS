@@ -97,24 +97,18 @@ def run_uncertainty_phase(cen, vc_out, sa_out, iua_out, spall_ok, **inputs) -> t
     uncertainty_ok = False
     error_msg = None
 
-    if not spall_ok:
-        logger.info("Skipping uncertainty analysis: spall analysis did not succeed.")
-        error_msg = "uncertainty: analysis skipped due to spall_ok=false"
-    else:
-        try:
-            logger.info("Running full uncertainty analysis...")
-            fua_out = full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs)
-            uncertainty_ok = True
-            logger.info(
-                "Uncertainty analysis complete: spall uncertainty=%.4f, strain rate uncertainty=%.4e",
-                fua_out["spall_uncert"],
-                fua_out["strain_rate_uncert"],
-            )
-        except Exception as e:
-            error_msg = f"uncertainty: {e}"
-            logger.error("Error in uncertainty analysis: %s", str(e))
-            logger.error("Traceback: %s", traceback.format_exc())
-            logger.info("Continuing without uncertainty analysis.")
+    try:
+        logger.info("Running full uncertainty analysis...")
+        fua_out = full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs)
+        uncertainty_ok = True
+        logger.info(
+            "Uncertainty analysis complete."
+        )
+    except Exception as e:
+        error_msg = f"uncertainty: {e}"
+        logger.error("Error in full uncertainty analysis: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
+        logger.info("Continuing without full uncertainty analysis.")
 
     return fua_out, uncertainty_ok, error_msg
 
