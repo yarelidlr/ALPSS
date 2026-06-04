@@ -31,7 +31,7 @@ logger = logging.getLogger("alpss")
 def run_velocity_phase(**inputs) -> tuple:
     """Run Phase 1 (velocity processing). Returns (vel_out, velocity_ok, error_msg)."""
     start_time = datetime.now()
-    velocity_ok = False
+    velocity_ok = True
     error_msg = None
     vel_out = {}
 
@@ -79,13 +79,16 @@ def run_velocity_phase(**inputs) -> tuple:
         if np.max(vc_out["velocity_f_smooth"]) < min_velocity:
             velocity_ok = False
             error_msg = f"velocity: Velocity did not exceed noise floor ({min_velocity})"
-        elif np.mean(iua_out["vel_uncert"]) > max_uncertainty:
+
+        if np.mean(iua_out["vel_uncert"]) > max_uncertainty:
             velocity_ok = False
-            error_msg = f"velocity: Uncertainty too high (>{max_uncertainty})"
-        else:
-            velocity_ok = True
+            if error_msg:
+                error_msg += f" and Uncertainty too high (>{max_uncertainty})"
+            else:
+                error_msg = f"velocity: Uncertainty too high (>{max_uncertainty})"
 
     except Exception as e:
+        velocity_ok = False
         error_msg = f"velocity: {e}"
         logger.error("Error in velocity processing: %s", str(e))
         logger.error("Traceback: %s", traceback.format_exc())
