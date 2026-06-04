@@ -31,44 +31,56 @@ def run_velocity_phase(**inputs) -> dict:
     """Run Phase 1 (velocity processing). Returns sdf_out, cen, cf_out, vc_out, iua_out, start_time, end_time."""
     start_time = datetime.now()
 
-    data = extract_data(inputs)
-    logger.info("Extracted %d samples", len(data))
+    try:
+        data = extract_data(inputs)
+        logger.info("Extracted %d samples", len(data))
 
-    sdf_out = spall_doi_finder(data, **inputs)
-    logger.info(
-        "Spall DOI found: start=%.3e s, end=%.3e s",
-        sdf_out["t_doi_start"],
-        sdf_out["t_doi_end"],
-    )
+        sdf_out = spall_doi_finder(data, **inputs)
+        logger.info(
+            "Spall DOI found: start=%.3e s, end=%.3e s",
+            sdf_out["t_doi_start"],
+            sdf_out["t_doi_end"],
+        )
 
-    cen = carrier_frequency(sdf_out, **inputs)
-    logger.info("Carrier frequency: %.6e Hz", cen)
+        cen = carrier_frequency(sdf_out, **inputs)
+        logger.info("Carrier frequency: %.6e Hz", cen)
 
-    cf_out = carrier_filter(sdf_out, cen, **inputs)
-    logger.info("Carrier filter applied")
+        cf_out = carrier_filter(sdf_out, cen, **inputs)
+        logger.info("Carrier filter applied")
 
-    vc_out = velocity_calculation(sdf_out, cen, cf_out, **inputs)
-    logger.info("Velocity calculated (%d points)", len(vc_out["time_f"]))
+        vc_out = velocity_calculation(sdf_out, cen, cf_out, **inputs)
+        logger.info("Velocity calculated (%d points)", len(vc_out["time_f"]))
 
-    iua_out = instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs)
-    logger.info("Instantaneous uncertainty computed")
+        iua_out = instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs)
+        logger.info("Instantaneous uncertainty computed")
 
-    vu_out = velocity_uncertainty_analysis(vc_out, iua_out)
-    vc_out.update(vu_out)
-    logger.info("Velocity uncertainties computed")
+        vu_out = velocity_uncertainty_analysis(vc_out, iua_out)
+        vc_out.update(vu_out)
+        logger.info("Velocity uncertainties computed")
 
-    end_time = datetime.now()
-    logger.info("Velocity processing complete in %s", end_time - start_time)
+        end_time = datetime.now()
+        logger.info("Velocity processing complete in %s", end_time - start_time)
 
-    return {
-        "sdf_out": sdf_out,
-        "cen": cen,
-        "cf_out": cf_out,
-        "vc_out": vc_out,
-        "iua_out": iua_out,
-        "start_time": start_time,
-        "end_time": end_time,
-    }
+        return {
+            "sdf_out": sdf_out,
+            "cen": cen,
+            "cf_out": cf_out,
+            "vc_out": vc_out,
+            "iua_out": iua_out,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+    except Exception as e:
+        logger.error("Error in velocity processing: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
+        try:
+            from alpss.io.reading import extract_data
+            from alpss.plotting.plots import plot_voltage
+
+            plot_voltage(extract_data(inputs), **inputs)
+        except Exception:
+            logger.error("Fallback voltage plot also failed.")
+        raise
 
 
 def run_spall_phase(vc_out, iua_out, **inputs) -> tuple:

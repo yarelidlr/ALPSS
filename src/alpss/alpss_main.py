@@ -22,17 +22,7 @@ def alpss_main(**inputs):
     validate_inputs(inputs)
 
     # --- Phase 1: Velocity Processing ---
-    try:
-        vel = run_velocity_phase(**inputs)
-    except Exception as e:
-        logger.error("Error in velocity processing: %s", str(e))
-        try:
-            from alpss.io.reading import extract_data
-
-            plot_voltage(extract_data(inputs), **inputs)
-        except Exception:
-            logger.error("Fallback voltage plot also failed.")
-        raise
+    vel = run_velocity_phase(**inputs)
 
     sdf_out = vel["sdf_out"]
     cen = vel["cen"]
