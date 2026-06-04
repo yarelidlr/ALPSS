@@ -126,6 +126,11 @@ def save(
         "Velocity at Max Compression": vc_out["v_max_comp"],
         "Time at Max Compression": vc_out["t_max_comp"],
         "Carrier Frequency": cen,
+        "Spect Time Res": sdf_out["t_res"],
+        "Spect Freq Res": sdf_out["f_res"],
+        "Spect Velocity Res": 0.5 * (inputs["lam"] * sdf_out["f_res"]),
+        "Signal Start Time": sdf_out["t_start_corrected"],
+        "Smoothing Characteristic Time": iua_out["tau"],
     })
 
     # Spall phase
@@ -164,15 +169,6 @@ def save(
             "HEL Segment Duration (ns)": hel_out.segment_duration_ns,
             "HEL Strain Rate": hel_out.strain_rate,
         })
-
-    # Spectral/analysis metadata
-    results_to_save.update({
-        "Spect Time Res": sdf_out["t_res"],
-        "Spect Freq Res": sdf_out["f_res"],
-        "Spect Velocity Res": 0.5 * (inputs["lam"] * sdf_out["f_res"]),
-        "Signal Start Time": sdf_out["t_start_corrected"],
-        "Smoothing Characteristic Time": iua_out["tau"],
-    })
 
     # Shock phase
     results_to_save.update({
