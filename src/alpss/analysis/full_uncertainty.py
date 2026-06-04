@@ -17,16 +17,6 @@ def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
     in Thin Metal Foils. Exp Mech 59, 611–628 (2019). https://doi.org/10.1007/s11340-019-00519-x
     """
 
-    # unpack dictionary values in to individual variables
-    rho = inputs["density"]
-    C0 = inputs["C0"]
-    lam = inputs["lam"]
-    delta_rho = inputs["delta_rho"]
-    delta_C0 = inputs["delta_C0"]
-    delta_lam = inputs["delta_lam"]
-    theta = inputs["theta"]
-    delta_theta = inputs["delta_theta"]
-
     # compute uncertainties at peak velocity point (always available)
     peak_velocity_idx = vc_out["peak_velocity_idx"]
     peak_velocity_freq_uncert = iua_out["freq_uncert"][peak_velocity_idx]
@@ -38,6 +28,15 @@ def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
 
     # compute spall-related uncertainties only if spall analysis succeeded
     if spall_ok:
+        # unpack dictionary values needed for spall calculations
+        rho = inputs["density"]
+        C0 = inputs["C0"]
+        lam = inputs["lam"]
+        delta_rho = inputs["delta_rho"]
+        delta_C0 = inputs["delta_C0"]
+        delta_lam = inputs["delta_lam"]
+        theta = inputs["theta"]
+        delta_theta = inputs["delta_theta"]
         delta_freq_tb = peak_velocity_freq_uncert
         delta_freq_td = sa_out["max_ten_freq_uncert"]
         delta_time_c = iua_out["tau"]
