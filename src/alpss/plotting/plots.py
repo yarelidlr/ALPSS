@@ -18,6 +18,7 @@ def plot_results(
     shock_out,
     start_time,
     end_time,
+    errors,
     **inputs,
 ):
 
@@ -404,6 +405,11 @@ def plot_results(
     table1.scale(1, 1.2)
     ax13.axis("tight")
     ax13.axis("off")
+
+    # Display errors if any
+    if errors:
+        error_text = "ERRORS: " + "; ".join(errors)
+        fig.text(0.5, 0.98, error_text, ha="center", va="top", fontsize=10, color="red", wrap=True)
 
     # fix the layout
     plt.tight_layout()

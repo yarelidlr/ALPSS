@@ -239,6 +239,7 @@ def run_output_phase(
         shock_out,
         start_time,
         end_time,
+        errors=errors,
         **inputs,
     )
 
