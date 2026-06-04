@@ -69,7 +69,7 @@ def run_velocity_phase(**inputs) -> tuple:
 
         logger.info("Velocity processing complete")
 
-        ### Velocity Qualifiers ###
+        # Velocity Qualifiers 
         min_velocity = inputs["min_velocity_threshold"]
         max_uncertainty = inputs["max_velocity_uncertainty_threshold"]
 
@@ -89,7 +89,7 @@ def run_velocity_phase(**inputs) -> tuple:
         try:
             from alpss.plotting.plots import plot_voltage
 
-            plot_voltage(extract_data(inputs), **inputs)
+            plot_voltage(extract_data(inputs), errors=errors, **inputs)
         except Exception:
             logger.error("Fallback voltage plot also failed.")
 

@@ -415,7 +415,7 @@ def plot_results(
     return fig
 
 
-def plot_voltage(data, **inputs):
+def plot_voltage(data, errors=None, **inputs):
 
     # rename the columns of the data
     data.columns = ["Time", "Ampl"]
@@ -449,7 +449,12 @@ def plot_voltage(data, **inputs):
     )
     ax2.set_xlabel("Time (ns)")
     ax2.set_ylabel("Frequency (GHz)")
-    fig.suptitle("ERROR: Program Failed", c="r", fontsize=16)
+
+    # Add error information to plot
+    error_text = "ERROR: Program Failed"
+    if errors:
+        error_text += f"\n{'; '.join(errors)}"
+    fig.suptitle(error_text, c="r", fontsize=16)
 
     plt.tight_layout()
     if inputs["save_data"]:
