@@ -14,10 +14,12 @@ def test_alpss_main_success(valid_inputs):
     ) as mock_velocity_calculation, patch(
         "alpss.utils.phases.instantaneous_uncertainty_analysis"
     ) as mock_iua, patch(
+        "alpss.utils.phases.velocity_uncertainty_analysis"
+    ) as mock_vu, patch(
         "alpss.utils.phases.spall_analysis"
     ) as mock_spall_analysis, patch(
-        "alpss.utils.phases.full_uncertainty_analysis"
-    ) as mock_fua, patch(
+        "alpss.utils.phases.spall_uncertainty_analysis"
+    ) as mock_sua, patch(
         "alpss.utils.phases.plot_results"
     ) as mock_plotting, patch(
         "alpss.utils.phases.save"
@@ -36,7 +38,8 @@ def test_alpss_main_success(valid_inputs):
         mock_carrier_filter.assert_called_once()
         mock_velocity_calculation.assert_called_once()
         mock_iua.assert_called_once()
+        mock_vu.assert_called_once()
         mock_spall_analysis.assert_called_once()
-        mock_fua.assert_called_once()
+        mock_sua.assert_called_once()
         mock_plotting.assert_called_once()
         mock_saving.assert_called_once()
