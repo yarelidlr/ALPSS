@@ -73,8 +73,8 @@ def run_velocity_phase(**inputs) -> tuple:
         vel_out["end_time"] = end_time
 
         ### Velocity Qualifiers ###
-        min_velocity = inputs.get("min_velocity_threshold", 25)
-        max_uncertainty = inputs.get("max_velocity_uncertainty_threshold", 10)
+        min_velocity = inputs["min_velocity_threshold"]
+        max_uncertainty = inputs["max_velocity_uncertainty_threshold"]
 
         if np.max(vc_out["velocity_f_smooth"]) < min_velocity:
             velocity_ok = False

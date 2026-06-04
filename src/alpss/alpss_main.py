@@ -79,7 +79,7 @@ def alpss_main(**inputs):
         shock_out,
         hel_out,
         start_time,
-        end_time,
+        end_time_final,
         velocity_ok,
         spall_ok,
         uncertainty_ok,
