@@ -10,6 +10,7 @@ from alpss.carrier.frequency import carrier_frequency
 from alpss.carrier.filter import carrier_filter
 from alpss.velocity.calculation import velocity_calculation
 from alpss.analysis.instantaneous_uncertainty import instantaneous_uncertainty_analysis
+from alpss.analysis.velocity_uncertainty import velocity_uncertainty_analysis
 from alpss.analysis.spall import spall_analysis
 from alpss.analysis.full_uncertainty import full_uncertainty_analysis
 from alpss.analysis.shock import shock_analysis
@@ -51,6 +52,10 @@ def run_velocity_phase(**inputs) -> dict:
 
     iua_out = instantaneous_uncertainty_analysis(sdf_out, vc_out, cen, **inputs)
     logger.info("Instantaneous uncertainty computed")
+
+    vu_out = velocity_uncertainty_analysis(vc_out, iua_out)
+    vc_out.update(vu_out)
+    logger.info("Velocity uncertainties computed")
 
     end_time = datetime.now()
     logger.info("Velocity processing complete in %s", end_time - start_time)

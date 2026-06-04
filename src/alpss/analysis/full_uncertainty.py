@@ -17,11 +17,6 @@ def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
     in Thin Metal Foils. Exp Mech 59, 611–628 (2019). https://doi.org/10.1007/s11340-019-00519-x
     """
 
-    # compute uncertainties at peak velocity point (always available)
-    peak_velocity_idx = vc_out["peak_velocity_idx"]
-    peak_velocity_freq_uncert = iua_out["freq_uncert"][peak_velocity_idx]
-    peak_velocity_vel_uncert = iua_out["vel_uncert"][peak_velocity_idx]
-
     # initialize spall-related uncertainties
     delta_spall = np.nan
     delta_strain_rate = np.nan
@@ -37,7 +32,7 @@ def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
         delta_lam = inputs["delta_lam"]
         theta = inputs["theta"]
         delta_theta = inputs["delta_theta"]
-        delta_freq_tb = peak_velocity_freq_uncert
+        delta_freq_tb = vc_out["peak_velocity_freq_uncert"]
         delta_freq_td = sa_out["max_ten_freq_uncert"]
         delta_time_c = iua_out["tau"]
         delta_time_d = iua_out["tau"]
@@ -100,12 +95,10 @@ def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
             + term13**2
         )
 
-    # save outputs to a dictionary
+    # save outputs to a dictionary (peak velocity uncertainties come from velocity phase)
     fua_out = {
         "spall_uncert": delta_spall,
         "strain_rate_uncert": delta_strain_rate,
-        "peak_velocity_freq_uncert": peak_velocity_freq_uncert,
-        "peak_velocity_vel_uncert": peak_velocity_vel_uncert,
     }
 
     return fua_out
