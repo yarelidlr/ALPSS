@@ -9,7 +9,7 @@ import numpy as np
 
 
 # program to calculate the uncertainty in the spall strength and strain rate
-def full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
+def spall_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs):
     """
     Based on the work of Mallick et al.
 

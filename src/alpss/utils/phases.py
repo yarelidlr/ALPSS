@@ -13,7 +13,7 @@ from alpss.velocity.calculation import velocity_calculation
 from alpss.analysis.instantaneous_uncertainty import instantaneous_uncertainty_analysis
 from alpss.analysis.velocity_uncertainty import velocity_uncertainty_analysis
 from alpss.analysis.spall import spall_analysis
-from alpss.analysis.full_uncertainty import full_uncertainty_analysis
+from alpss.analysis.full_uncertainty import spall_uncertainty_analysis
 from alpss.analysis.shock import shock_analysis
 from alpss.analysis.hel import hel_detection
 from alpss.plotting.plots import plot_results
@@ -128,26 +128,31 @@ def run_spall_phase(vc_out, iua_out, **inputs) -> tuple:
     return sa_out, spall_ok, error_msg
 
 
-def run_uncertainty_phase(cen, vc_out, sa_out, iua_out, spall_ok, **inputs) -> tuple:
-    """Phase 2b: Uncertainty analysis. Returns (fua_out, uncertainty_ok, error_msg)."""
-    fua_out = default_uncertainty_output()
-    uncertainty_ok = False
+def run_spall_uncertainty_phase(cen, vc_out, sa_out, iua_out, spall_ok, **inputs) -> tuple:
+    """Phase 2b: Spall uncertainty analysis. Returns (sua_out, spall_uncertainty_ok, error_msg)."""
+    sua_out = default_uncertainty_output()
+    spall_uncertainty_ok = False
     error_msg = None
 
+    if not spall_ok:
+        error_msg = "spall_uncertainty: skipped due to spall_ok=false"
+        logger.info(error_msg)
+        return sua_out, spall_uncertainty_ok, error_msg
+
     try:
-        logger.info("Running full uncertainty analysis...")
-        fua_out = full_uncertainty_analysis(cen, vc_out, sa_out, iua_out, spall_ok, **inputs)
-        uncertainty_ok = True
+        logger.info("Running spall uncertainty analysis...")
+        sua_out = spall_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs)
+        spall_uncertainty_ok = True
         logger.info(
-            "Uncertainty analysis complete."
+            "Spall uncertainty analysis complete."
         )
     except Exception as e:
-        error_msg = f"uncertainty: {e}"
-        logger.error("Error in full uncertainty analysis: %s", str(e))
+        error_msg = f"spall_uncertainty: {e}"
+        logger.error("Error in spall uncertainty analysis: %s", str(e))
         logger.error("Traceback: %s", traceback.format_exc())
-        logger.info("Continuing without full uncertainty analysis.")
+        logger.info("Continuing without spall uncertainty analysis.")
 
-    return fua_out, uncertainty_ok, error_msg
+    return sua_out, spall_uncertainty_ok, error_msg
 
 
 def run_hel_phase(vc_out, iua_out, **inputs) -> tuple:
@@ -217,14 +222,14 @@ def run_output_phase(
     vc_out,
     sa_out,
     iua_out,
-    fua_out,
+    sua_out,
     shock_out,
     hel_out,
     start_time,
     end_time,
     velocity_ok,
     spall_ok,
-    uncertainty_ok,
+    spall_uncertainty_ok,
     errors,
     **inputs,
 ) -> tuple:
@@ -238,7 +243,7 @@ def run_output_phase(
         vc_out,
         sa_out,
         iua_out,
-        fua_out,
+        sua_out,
         shock_out,
         start_time,
         end_time,
@@ -277,14 +282,14 @@ def run_output_phase(
         vc_out,
         sa_out,
         iua_out,
-        fua_out,
+        sua_out,
         shock_out,
         start_time,
         end_time,
         fig,
         velocity_ok,
         spall_ok,
-        uncertainty_ok,
+        spall_uncertainty_ok,
         iq_fig=sdf_out.get("iq_fig"),
         hel_fig=hel_fig,
         hel_out=hel_out,

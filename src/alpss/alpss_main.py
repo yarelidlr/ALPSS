@@ -4,7 +4,7 @@ from alpss.utils.config import flatten_config
 from alpss.utils.phases import (
     run_velocity_phase,
     run_spall_phase,
-    run_uncertainty_phase,
+    run_spall_uncertainty_phase,
     run_shock_phase,
     run_hel_phase,
     run_output_phase,
@@ -47,12 +47,12 @@ def alpss_main(**inputs):
     if spall_error:
         errors.append(spall_error)
 
-    # --- Phase 2b: Full uncertainty analysis ---
-    fua_out, uncertainty_ok, uncertainty_error = run_uncertainty_phase(
+    # --- Phase 2b: Spall uncertainty analysis ---
+    sua_out, spall_uncertainty_ok, spall_uncertainty_error = run_spall_uncertainty_phase(
         cen, vc_out, sa_out, iua_out, spall_ok, **inputs
-    ) if velocity_ok else (default_uncertainty_output(), False, "uncertainty: skipped due to velocity_ok=false")
-    if uncertainty_error:
-        errors.append(uncertainty_error)
+    ) if velocity_ok else (default_uncertainty_output(), False, "spall_uncertainty: skipped due to velocity_ok=false")
+    if spall_uncertainty_error:
+        errors.append(spall_uncertainty_error)
 
     # --- Phase 2c: HEL detection (optional) ---
     hel_out, hel_error = run_hel_phase(vc_out, iua_out, **inputs) if velocity_ok else (default_hel_output(), "hel: skipped due to velocity_ok=false")
@@ -75,14 +75,14 @@ def alpss_main(**inputs):
         vc_out,
         sa_out,
         iua_out,
-        fua_out,
+        sua_out,
         shock_out,
         hel_out,
         start_time,
         end_time_final,
         velocity_ok,
         spall_ok,
-        uncertainty_ok,
+        spall_uncertainty_ok,
         errors,
         **inputs,
     )
