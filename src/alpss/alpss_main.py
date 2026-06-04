@@ -22,36 +22,39 @@ def alpss_main(**inputs):
     validate_inputs(inputs)
 
     # --- Phase 1: Velocity Processing ---
-    vel = run_velocity_phase(**inputs)
+    vel, velocity_ok, velocity_error = run_velocity_phase(**inputs)
 
-    sdf_out = vel["sdf_out"]
-    cen = vel["cen"]
-    cf_out = vel["cf_out"]
-    vc_out = vel["vc_out"]
-    iua_out = vel["iua_out"]
-    start_time = vel["start_time"]
-    end_time = vel["end_time"]
+    sdf_out = vel.get("sdf_out") if velocity_ok else {}
+    cen = vel.get("cen") if velocity_ok else None
+    cf_out = vel.get("cf_out") if velocity_ok else {}
+    vc_out = vel.get("vc_out") if velocity_ok else {}
+    iua_out = vel.get("iua_out") if velocity_ok else {}
+    start_time = vel.get("start_time") if velocity_ok else datetime.now()
+    end_time = vel.get("end_time") if velocity_ok else datetime.now()
+
+    errors = []
+    if velocity_error:
+        errors.append(velocity_error)
 
     # --- Phase 2a: Spall analysis (optional) ---
-    errors = []
-    sa_out, spall_ok, spall_error = run_spall_phase(vc_out, iua_out, **inputs)
+    sa_out, spall_ok, spall_error = run_spall_phase(vc_out, iua_out, **inputs) if velocity_ok else (default_spall_output(), False, "spall: skipped due to velocity_ok=false")
     if spall_error:
         errors.append(spall_error)
 
     # --- Phase 2b: Full uncertainty analysis ---
     fua_out, uncertainty_ok, uncertainty_error = run_uncertainty_phase(
         cen, vc_out, sa_out, iua_out, spall_ok, **inputs
-    )
+    ) if velocity_ok else (default_uncertainty_output(), False, "uncertainty: skipped due to velocity_ok=false")
     if uncertainty_error:
         errors.append(uncertainty_error)
 
     # --- Phase 2c: HEL detection (optional) ---
-    hel_out, hel_error = run_hel_phase(vc_out, iua_out, **inputs)
+    hel_out, hel_error = run_hel_phase(vc_out, iua_out, **inputs) if velocity_ok else (default_hel_output(), "hel: skipped due to velocity_ok=false")
     if hel_error:
         errors.append(hel_error)
 
     # --- Phase 2d: Shock analysis ---
-    shock_out, shock_error = run_shock_phase(vc_out, **inputs)
+    shock_out, shock_error = run_shock_phase(vc_out, **inputs) if velocity_ok else (default_shock_output(), "shock: skipped due to velocity_ok=false")
     if shock_error:
         errors.append(shock_error)
 
@@ -71,6 +74,7 @@ def alpss_main(**inputs):
         hel_out,
         start_time,
         end_time,
+        velocity_ok,
         spall_ok,
         uncertainty_ok,
         errors,
