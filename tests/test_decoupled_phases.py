@@ -7,18 +7,18 @@ from alpss.alpss_main import alpss_main
 
 
 def test_velocity_only_no_spall(valid_inputs):
-    """Test that velocity processing succeeds with spall_calculation=False."""
+    """Test that velocity processing succeeds with spall_enabled=False."""
     inputs = copy.deepcopy(valid_inputs)
-    inputs["spall"]["spall_calculation"] = False
+    inputs["spall"]["spall_enabled"] = False
 
     results = alpss_main(**inputs)
     assert (
         results is not None
-    ), "alpss_main should return results even with spall_calculation='no'"
+    ), "alpss_main should return results even with spall_enabled='no'"
     assert isinstance(results[0], Figure)
     result_dict = results[1]["results"][0]
     assert not np.isnan(result_dict["Carrier Frequency"])
-    # Spall values should be NaN when spall_calculation is 'no'
+    # Spall values should be NaN when spall_enabled is 'no'
     assert np.isnan(result_dict["Spall Strength"])
     assert np.isnan(result_dict["Strain Rate"])
 

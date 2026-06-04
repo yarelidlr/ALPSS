@@ -19,11 +19,12 @@ def save(
     start_time,
     end_time,
     fig,
+    velocity_ok,
+    spall_ok,
+    uncertainty_ok,
     iq_fig=None,
     hel_fig=None,
     hel_out=None,
-    spall_ok=True,
-    uncertainty_ok=True,
     error_msg=None,
     **inputs,
 ):
@@ -108,50 +109,71 @@ def save(
         )
         vel_uncert_assets.append(vel_uncert_path)
 
-    results_to_save = {
+    results_to_save = {}
+
+    # Metadata
+    results_to_save.update({
         "Date": start_time.strftime("%b %d %Y"),
         "Time": start_time.strftime("%I:%M %p"),
         "File Name": os.path.basename(inputs["filepath"]),
-        "Velocity OK": True,
-        "Spall OK": spall_ok,
-        "Uncertainty OK": uncertainty_ok,
-        "Error Message": error_msg,
         "Run Time": (end_time - start_time),
+        "Error Message": error_msg,
+    })
+
+    # Velocity phase
+    results_to_save.update({
+        "Velocity OK": velocity_ok,
         "Velocity at Max Compression": vc_out["v_max_comp"],
         "Time at Max Compression": vc_out["t_max_comp"],
-        "Velocity at Max Compression Freq Uncertainty": fua_out["peak_velocity_freq_uncert"],
-        "Velocity at Max Compression Vel Uncertainty": fua_out["peak_velocity_vel_uncert"],
-        "Velocity at Max Tension": sa_out["v_max_ten"],
-        "Time at Max Tension": sa_out["t_max_ten"],
-        "Velocity at Recompression": sa_out["v_rc"],
-        "Time at Recompression": sa_out["t_rc"],
         "Carrier Frequency": cen,
-        "Spall Strength": sa_out["spall_strength_est"],
-        "Spall Strength Uncertainty": fua_out["spall_uncert"],
-        "Strain Rate": sa_out["strain_rate_est"],
-        "Strain Rate Uncertainty": fua_out["strain_rate_uncert"],
-        "Peak Shock Stress": shock_out["peak_shock_stress"],
         "Spect Time Res": sdf_out["t_res"],
         "Spect Freq Res": sdf_out["f_res"],
         "Spect Velocity Res": 0.5 * (inputs["lam"] * sdf_out["f_res"]),
         "Signal Start Time": sdf_out["t_start_corrected"],
         "Smoothing Characteristic Time": iua_out["tau"],
-    }
+    })
 
-    # Add HEL results when HEL detection was enabled
+    # Spall phase
+    results_to_save.update({
+        "Spall Enabled": inputs["spall_enabled"],
+        "Spall OK": spall_ok,
+        "Velocity at Max Tension": sa_out["v_max_ten"],
+        "Time at Max Tension": sa_out["t_max_ten"],
+        "Velocity at Max Tension Freq Uncertainty": sa_out["max_ten_freq_uncert"],
+        "Velocity at Max Tension Vel Uncertainty": sa_out["max_ten_vel_uncert"],
+        "Velocity at Recompression": sa_out["v_rc"],
+        "Time at Recompression": sa_out["t_rc"],
+        "Spall Strength": sa_out["spall_strength_est"],
+        "Strain Rate": sa_out["strain_rate_est"],
+    })
+
+    # Uncertainty phase
+    results_to_save.update({
+        "Uncertainty OK": uncertainty_ok,
+        "Velocity at Max Compression Freq Uncertainty": fua_out["peak_velocity_freq_uncert"],
+        "Velocity at Max Compression Vel Uncertainty": fua_out["peak_velocity_vel_uncert"],
+        "Spall Strength Uncertainty": fua_out["spall_uncert"],
+        "Strain Rate Uncertainty": fua_out["strain_rate_uncert"],
+    })
+
+    # HEL phase
     if hel_out is not None:
-        results_to_save.update(
-            {
-                "HEL Detected": hel_out.ok,
-                "HEL Strength (GPa)": hel_out.strength_gpa,
-                "HEL Uncertainty (GPa)": hel_out.uncertainty_gpa,
-                "HEL Free Surface Velocity (m/s)": hel_out.free_surface_velocity,
-                "HEL Time Detection (ns)": hel_out.time_detection_ns,
-                "HEL Consecutive Points": hel_out.consecutive_points,
-                "HEL Segment Duration (ns)": hel_out.segment_duration_ns,
-                "HEL Strain Rate": hel_out.strain_rate,
-            }
-        )
+        results_to_save.update({
+            "HEL Enabled": inputs["hel_enabled"],
+            "HEL OK": hel_out.ok,
+            "HEL Strength (GPa)": hel_out.strength_gpa,
+            "HEL Uncertainty (GPa)": hel_out.uncertainty_gpa,
+            "HEL Free Surface Velocity (m/s)": hel_out.free_surface_velocity,
+            "HEL Time Detection (ns)": hel_out.time_detection_ns,
+            "HEL Consecutive Points": hel_out.consecutive_points,
+            "HEL Segment Duration (ns)": hel_out.segment_duration_ns,
+            "HEL Strain Rate": hel_out.strain_rate,
+        })
+
+    # Shock phase
+    results_to_save.update({
+        "Peak Shock Stress": shock_out["peak_shock_stress"],
+    })
 
     # Convert the dictionary to a DataFrame
     results_df = pd.DataFrame([results_to_save])
@@ -168,7 +190,7 @@ def save(
     results_assets = [results_dict]
     if inputs["save_data"]:
         results_path = f"{fname}-results.csv"
-        results_df.T.to_csv(results_path, header=False)
+        results_df.to_csv(results_path, index=False)
         results_assets.append(results_path)
 
     # save the IQ diagnostic figure
