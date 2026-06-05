@@ -417,17 +417,17 @@ def plot_results(
     ax13.axis("off")
 
     # Display phase status with color coding
-    fig.text(0.5, 0.52, "Phase Status", ha="center", va="top", fontsize=12, weight="bold")
+    fig.text(0.3, 0.52, "Phase Status", ha="left", va="top", fontsize=12, weight="bold")
 
     y_pos = 0.49
     for phase_name, phase_ok in [("velocity", velocity_ok), ("spall", spall_ok),
                                   ("spall_uncertainty", spall_uncertainty_ok), ("hel", hel_ok)]:
         status = "succeeded" if phase_ok else "failed"
         color = "green" if phase_ok else "red"
-        fig.text(0.5, y_pos, f"{phase_name}: {status}", ha="center", va="top", fontsize=10, color=color, weight="bold")
+        fig.text(0.3, y_pos, f"{phase_name}: {status}", ha="left", va="top", fontsize=10, color=color, weight="bold")
         y_pos -= 0.03
 
-    fig.text(0.5, y_pos - 0.01, "See results.csv for error details", ha="center", va="top", fontsize=9, style="italic")
+    fig.text(0.3, y_pos - 0.01, "See results.csv for error details", ha="left", va="top", fontsize=9, style="italic")
 
     # fix the layout
     plt.tight_layout()
