@@ -55,3 +55,31 @@ def save_combined_series(results, probe_numbers, filepath, out_files_dir):
         for df in volt_frames[1:]:
             merged_volt = pd.merge(merged_volt, df, on="time", how="outer")
         merged_volt.to_csv(f"{base_path}-voltage.csv", index=False)
+
+    # inputs: one row per probe, probe_number as first column
+    inputs_frames = []
+    for probe_num, result in zip(probe_numbers, results):
+        if result is None:
+            continue
+        _, items = result
+        df = items["inputs"][0].copy()
+        df.insert(0, "probe_number", probe_num)
+        inputs_frames.append(df)
+    if inputs_frames:
+        pd.concat(inputs_frames, ignore_index=True).to_csv(
+            f"{base_path}-inputs.csv", index=False
+        )
+
+    # results: one row per probe, probe_number as first column
+    results_frames = []
+    for probe_num, result in zip(probe_numbers, results):
+        if result is None:
+            continue
+        _, items = result
+        df = pd.DataFrame([items["results"][0]])
+        df.insert(0, "probe_number", probe_num)
+        results_frames.append(df)
+    if results_frames:
+        pd.concat(results_frames, ignore_index=True).to_csv(
+            f"{base_path}-results.csv", index=False
+        )

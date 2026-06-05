@@ -55,16 +55,17 @@ def save(
         k: str(v) if isinstance(v, (list, np.ndarray)) else v
         for k, v in inputs.items()
     }
-    inputs_df = pd.DataFrame.from_dict(inputs_serializable, orient="index", columns=["Input"])
+    inputs_df = pd.DataFrame([inputs_serializable])
     inputs_assets = [inputs_df]
-    if inputs["save_data"]:
-        inputs_path = f"{fname}-inputs.csv"
-        inputs_df.to_csv(inputs_path, index=True, header=False)
-        inputs_assets.append(inputs_path)
 
-    # In multipoint mode the combined wide-format CSV is written by
-    # alpss_multipoint after all probes are processed; skip per-probe writes.
+    # In multipoint mode combined CSVs are written by alpss_multipoint after
+    # all probes are processed; skip per-probe writes.
     _single_probe = inputs.get("multipoint_probe") is None
+
+    if inputs["save_data"] and _single_probe:
+        inputs_path = f"{fname}-inputs.csv"
+        inputs_df.to_csv(inputs_path, index=False)
+        inputs_assets.append(inputs_path)
 
     # save the displacement vs time history
     displacement_data = np.stack(
@@ -216,7 +217,7 @@ def save(
 
     results_dict = results_df.iloc[0].to_dict()
     results_assets = [results_dict]
-    if inputs["save_data"]:
+    if inputs["save_data"] and _single_probe:
         results_path = f"{fname}-results.csv"
         results_df.to_csv(results_path, index=False)
         results_assets.append(results_path)
