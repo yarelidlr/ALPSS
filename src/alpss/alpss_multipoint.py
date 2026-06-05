@@ -1,6 +1,7 @@
 import logging
 from alpss.alpss_main import alpss_main
 from alpss.carrier.freq_refinement import find_carrier
+from alpss.utils import extract_data
 
 logger = logging.getLogger("alpss")
 
@@ -24,8 +25,9 @@ def alpss_multipoint(
         Keys are channel names (e.g. ``"ch1"``); values are DataFrames with
         columns ``tar_lam`` (nm), ``ref_lam`` (nm), and ``probe_number``.
     filepath : str
-        Path to the input file with ``{channel}`` as a placeholder for the
-        channel name, e.g. ``r"C:/data/shot_00006_{channel}.csv"``.
+        Path to the input CSV file containing all probe channels. Column 0 is
+        time; columns 1, 2, 3, … are probe voltages in the order probes are
+        listed across all channels.
     freq_lower : float
         How far below the beat frequency to set ``freq_min`` (Hz). Default 1 GHz.
     freq_upper : float
@@ -41,7 +43,7 @@ def alpss_multipoint(
         If only one of the two refine params is provided, the other mirrors it.
     **kwargs
         All other keyword arguments are forwarded to :func:`alpss_main`.
-        ``filepath``, ``multipoint_probe``, ``lam``, ``freq_min``, and
+        ``filepath``, ``_data``, ``multipoint_probe``, ``lam``, ``freq_min``, and
         ``freq_max`` are set automatically and should **not** be passed here.
 
     Returns
@@ -50,13 +52,16 @@ def alpss_multipoint(
         One ``(fig, items)`` tuple per probe (or ``None`` on failure),
         in channel-then-probe order.
     """
-    reserved = {"filepath", "multipoint_probe", "lam", "freq_min", "freq_max"}
+    reserved = {"filepath", "_data", "multipoint_probe", "lam", "freq_min", "freq_max"}
     conflicts = reserved & kwargs.keys()
     if conflicts:
         raise ValueError(
             f"The following kwargs are set automatically by alpss_multipoint "
             f"and must not be passed manually: {conflicts}"
         )
+
+    # Read the full multi-column file once; each probe gets a 2-column slice
+    raw = extract_data({**kwargs, "filepath": filepath})
 
     # If only one refine bound is given, mirror it for the other
     refine = freq_refine_lower is not None or freq_refine_upper is not None
@@ -67,8 +72,8 @@ def alpss_multipoint(
             freq_refine_upper = freq_refine_lower
 
     results = []
+    voltage_idx = 1
     for channel_name, channel_df in channels.items():
-        channel_filepath = filepath.format(channel=channel_name)
         for _, row in channel_df.iterrows():
             tar_lam_nm = row["tar_lam"]
             ref_lam_nm = row["ref_lam"]
@@ -76,6 +81,9 @@ def alpss_multipoint(
 
             # Beat frequency between target and reference wavelengths
             upshift = _C / (tar_lam_nm * 1e-9) - _C / (ref_lam_nm * 1e-9)
+
+            # 2-column DataFrame slice [time, voltage] for this probe
+            probe_data = raw.iloc[:, [0, voltage_idx]].copy()
 
             logger.info(
                 "Channel %s | probe %s | upshift=%.4f GHz",
@@ -86,25 +94,26 @@ def alpss_multipoint(
 
             try:
                 common = dict(
-                    filepath=channel_filepath,
+                    _data=probe_data,
+                    filepath=filepath,
                     multipoint_probe=probe_number,
                     lam=ref_lam_nm * 1e-9,
                 )
 
                 if refine:
-                    # --- Carrier center frequency refinement ---
                     logger.info(
                         "Channel %s | probe %s | finding carrier (wide bounds)",
                         channel_name,
                         probe_number,
                     )
                     cen = find_carrier(
-                        filepath=channel_filepath,
+                        data=probe_data.values,
+                        filepath=filepath,
                         freq_min=upshift - freq_lower,
                         freq_max=upshift + freq_upper,
                         **{k: v for k, v in kwargs.items()
                            if k in ("sample_rate", "time_to_skip", "carrier_band_time",
-                                    "header_lines", "bytestring")},
+                                    "header_lines")},
                     )
                     logger.info(
                         "Channel %s | probe %s | carrier found: %.4f GHz — running with refined bounds",
@@ -113,7 +122,6 @@ def alpss_multipoint(
                         cen / 1e9,
                     )
 
-                    # --- Full run with refined bounds centred on found carrier ---
                     result = alpss_main(
                         **common,
                         freq_min=cen - freq_refine_lower,
@@ -138,5 +146,7 @@ def alpss_multipoint(
                     e,
                 )
                 results.append(None)
+
+        voltage_idx += 1
 
     return results

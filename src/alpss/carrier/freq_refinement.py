@@ -5,7 +5,7 @@ from scipy.fft import fft, fftfreq
 
 
 def find_carrier(filepath, freq_min, freq_max, sample_rate, time_to_skip,
-                 carrier_band_time, header_lines, bytestring=None, **_):
+                 carrier_band_time, header_lines, bytestring=None, data=None, **_):
     """Cheaply estimate the carrier frequency from the pre-signal window.
 
     Reads only ``carrier_band_time`` worth of samples starting at
@@ -32,6 +32,9 @@ def find_carrier(filepath, freq_min, freq_max, sample_rate, time_to_skip,
         Number of header rows in the CSV.
     bytestring : bytes, optional
         In-memory data source; used instead of ``filepath`` when provided.
+    data : np.ndarray, optional
+        Pre-loaded 2-column array ``[time, voltage]`` already windowed to
+        ``time_to_skip``. When provided, skips all file I/O.
 
     Returns
     -------
@@ -39,17 +42,22 @@ def find_carrier(filepath, freq_min, freq_max, sample_rate, time_to_skip,
         Carrier frequency (Hz).
     """
     t_step = 1 / sample_rate
-    rows_to_skip = header_lines + int(round(time_to_skip / t_step))
     nrows = int(round(carrier_band_time / t_step))
 
-    if bytestring is not None and isinstance(bytestring, bytes):
-        data = pd.read_csv(io.BytesIO(bytestring), skiprows=rows_to_skip, nrows=nrows, header=None)
+    if data is not None:
+        chunk = data[:nrows]
+        time = chunk[:, 0]
+        time = time - time[0]
+        voltage = chunk[:, 1]
     else:
-        data = pd.read_csv(filepath, skiprows=rows_to_skip, nrows=nrows, header=None)
-
-    time = data.iloc[:, 0].to_numpy()
-    time = time - time[0]
-    voltage = data.iloc[:, 1].to_numpy()
+        rows_to_skip = header_lines + int(round(time_to_skip / t_step))
+        if bytestring is not None and isinstance(bytestring, bytes):
+            df = pd.read_csv(io.BytesIO(bytestring), skiprows=rows_to_skip, nrows=nrows, header=None)
+        else:
+            df = pd.read_csv(filepath, skiprows=rows_to_skip, nrows=nrows, header=None)
+        time = df.iloc[:, 0].to_numpy()
+        time = time - time[0]
+        voltage = df.iloc[:, 1].to_numpy()
 
     fs = 1 / np.mean(np.diff(time))
 
