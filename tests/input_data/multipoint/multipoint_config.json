@@ -1,0 +1,77 @@
+{
+    "filepath": "tests/input_data/multipoint/multipoint_example.csv",
+    "out_files_dir": "tests/output_data/multipoint/",
+    "multipoint": "yes",
+    "channels": {
+        "ch1": [
+            {"tar_lam": 1550.000, "ref_lam": 1550.016, "probe_number": 10}
+        ],
+        "ch2": [
+            {"tar_lam": 1531.116, "ref_lam": 1531.140, "probe_number": 6},
+            {"tar_lam": 1537.397, "ref_lam": 1537.453, "probe_number": 9},
+            {"tar_lam": 1543.730, "ref_lam": 1543.810, "probe_number": 15}
+        ],
+        "ch3": [
+            {"tar_lam": 1531.236, "ref_lam": 1531.316, "probe_number": 3},
+            {"tar_lam": 1537.549, "ref_lam": 1537.605, "probe_number": 8},
+            {"tar_lam": 1543.906, "ref_lam": 1543.930, "probe_number": 19}
+        ]
+    },
+    "freq_lower": 2e9,
+    "freq_upper": 2e9,
+    "freq_refine_lower": 0.25e9,
+    "freq_refine_upper": 1e9,
+    "start_time_user": "cusum",
+    "carrier_filter_type": "gaussian_notch",
+    "save_data": "yes",
+    "display_plots": "no",
+    "spall_calculation": "yes",
+    "window": "hann",
+    "cmap": "viridis",
+    "header_lines": 1,
+    "time_to_skip": 0.1e-06,
+    "time_to_take": 2e-06,
+    "t_before": 100e-09,
+    "t_after": 800e-09,
+    "start_time_correction": 0.0,
+    "smoothing_window": 601,
+    "smoothing_wid": 3,
+    "smoothing_amp": 1,
+    "smoothing_sigma": 1,
+    "smoothing_mu": 0,
+    "pb_neighbors": 400,
+    "pb_idx_correction": 0,
+    "rc_neighbors": 400,
+    "rc_idx_correction": 0,
+    "sample_rate": 128e9,
+    "nperseg": 512,
+    "noverlap": 435,
+    "nfft": 5120,
+    "blur_kernel": [
+        5,
+        5
+    ],
+    "blur_sigx": 0,
+    "blur_sigy": 0,
+    "carrier_band_time": 100e-9,
+    "uncert_mult": 100,
+    "order": 6,
+    "wid": 50000000.0,
+    "C0": 4540,
+    "density": 1730,
+    "delta_rho": 9,
+    "delta_C0": 23,
+    "delta_lam": 8.0e-18,
+    "theta": 0,
+    "delta_theta": 5,
+    "plot_figsize": [
+        30,
+        10
+    ],
+    "plot_dpi": 300,
+    "iq_threshold_factor": 0.4,
+    "cusum_offset": 2,
+    "cusum_threshold": 500,
+    "t_fit_begin": 20e-9,
+    "t_fit_end": 300e-9
+}
