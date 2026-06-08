@@ -5,7 +5,7 @@
     "carrier_filter_type": "gaussian_notch",
     "save_data": "yes",
     "display_plots": "no",
-    "spall_calculation": "yes",
+    "spall_enabled": "yes",
     "window": "hann",
     "cmap": "viridis",
     "header_lines": 1,
