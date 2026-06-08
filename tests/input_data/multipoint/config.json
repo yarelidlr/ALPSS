@@ -21,10 +21,10 @@
         "blur_sigy": 0
     },
     "start_time": {
-        "start_time_user": 1675e-9,
+        "start_time_user": "iq",
         "start_time_correction": 0.0,
-        "t_before": 10e-09,
-        "t_after": 100e-09,
+        "t_before": 100e-09,
+        "t_after": 500e-09,
         "iq_threshold_factor": 0.4,
         "cusum_offset": 5,
         "cusum_threshold": 1000,
