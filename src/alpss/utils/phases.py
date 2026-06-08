@@ -39,6 +39,9 @@ def run_velocity_phase(**inputs) -> tuple:
         data = extract_data(inputs)
         logger.info("Extracted %d samples", len(data))
 
+        data = data.iloc[:,:1] #Truncate data to only include first voltage column.
+        print(data)
+
         sdf_out = spall_doi_finder(data, **inputs)
         logger.info(
             "Spall DOI found: start=%.3e s, end=%.3e s",
