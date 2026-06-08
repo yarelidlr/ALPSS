@@ -33,6 +33,11 @@ def run_velocity_phase(**inputs) -> dict:
     data = extract_data(inputs)
     logger.info("Extracted %d samples", len(data))
 
+    if inputs.get("multipoint") is not True:
+        data = data
+    else:
+        data = data.iloc[:, [0, 1]] #truncate the data if it is not multipoint
+
     sdf_out = spall_doi_finder(data, **inputs)
     logger.info(
         "Spall DOI found: start=%.3e s, end=%.3e s",
