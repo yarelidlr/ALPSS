@@ -390,6 +390,9 @@ def plot_results(
             "Peak Shock Stress (GPa)",
             "Strain Rate (x1e6)",
             "Spall Strength (GPa)",
+            "Velocity",
+            "Spall & Uncertainty",
+            "HEL",
         ],
         "Value": [
             start_time.strftime("%b %d %Y"),
@@ -400,6 +403,9 @@ def plot_results(
             round(shock_out["peak_shock_stress"] / 1e9, 6),
             rf"{round(sa_out['strain_rate_est'] / 1e6, 6)} $\pm$ {round(fua_out['strain_rate_uncert'] / 1e6, 6)}",
             rf"{round(sa_out['spall_strength_est'] / 1e9, 6)} $\pm$ {round(fua_out['spall_uncert'] / 1e9, 6)}",
+            "✓" if velocity_ok else "✗",
+            f"{'✓' if spall_ok else '✗'} | {'✓' if spall_uncertainty_ok else '✗'}",
+            "✓" if hel_ok else "✗",
         ],
     }
 
@@ -413,20 +419,19 @@ def plot_results(
     table1.set_fontsize(8)
     table1.auto_set_column_width([0, 1])
     table1.scale(1, 1.2)
+
+    # Color code the phase status rows (account for header row in table indexing)
+    phase_colors = [
+        ("#90EE90" if velocity_ok else "#FFB6C6", len(df1) - 2),
+        ("#90EE90" if (spall_ok and spall_uncertainty_ok) else "#FFB6C6", len(df1) - 1),
+        ("#90EE90" if hel_ok else "#FFB6C6", len(df1)),
+    ]
+    for color, row_idx in phase_colors:
+        table1[(row_idx, 0)].set_facecolor(color)
+        table1[(row_idx, 1)].set_facecolor(color)
+
     ax13.axis("tight")
     ax13.axis("off")
-
-    # Display phase status with color coding
-    y_pos = 0.52
-    fig.text(0.3, y_pos, "Phase Status", ha="left", va="center", fontsize=11, weight="bold")
-    y_pos -= 0.04
-
-    for phase_name, phase_ok in [("velocity", velocity_ok), ("spall", spall_ok),
-                                  ("spall_uncertainty", spall_uncertainty_ok), ("hel", hel_ok)]:
-        status = "succeeded" if phase_ok else "failed"
-        color = "green" if phase_ok else "red"
-        fig.text(0.3, y_pos, f"{phase_name}: {status}", ha="left", va="center", fontsize=10, color=color, weight="bold")
-        y_pos -= 0.035
 
     # fix the layout
     plt.tight_layout()
