@@ -380,12 +380,6 @@ def plot_results(
         ax11.set_ylim([0, iua_out["freq_uncert_scaling"] * (inputs["lam"] / 2)])
 
     # table to show results of the run
-    phase_status = " | ".join([
-        f"{name}: {'✓' if ok else '✗'}"
-        for name, ok in [("velocity", velocity_ok), ("spall", spall_ok),
-                         ("spall_uncertainty", spall_uncertainty_ok), ("hel", hel_ok)]
-    ])
-
     run_data1 = {
         "Name": [
             "Date",
@@ -396,7 +390,9 @@ def plot_results(
             "Peak Shock Stress (GPa)",
             "Strain Rate (x1e6)",
             "Spall Strength (GPa)",
-            "Phase Status",
+            "Velocity",
+            "Spall & Uncertainty",
+            "HEL",
         ],
         "Value": [
             start_time.strftime("%b %d %Y"),
@@ -407,7 +403,9 @@ def plot_results(
             round(shock_out["peak_shock_stress"] / 1e9, 6),
             rf"{round(sa_out['strain_rate_est'] / 1e6, 6)} $\pm$ {round(fua_out['strain_rate_uncert'] / 1e6, 6)}",
             rf"{round(sa_out['spall_strength_est'] / 1e9, 6)} $\pm$ {round(fua_out['spall_uncert'] / 1e9, 6)}",
-            phase_status,
+            "✓" if velocity_ok else "✗",
+            f"{'✓' if spall_ok else '✗'} | {'✓' if spall_uncertainty_ok else '✗'}",
+            "✓" if hel_ok else "✗",
         ],
     }
 
@@ -422,10 +420,15 @@ def plot_results(
     table1.auto_set_column_width([0, 1])
     table1.scale(1, 1.2)
 
-    # Color code the phase status row
-    status_color = "#90EE90" if (velocity_ok and spall_ok and spall_uncertainty_ok and hel_ok) else "#FFB6C6"
-    table1[(len(df1), 0)].set_facecolor(status_color)
-    table1[(len(df1), 1)].set_facecolor(status_color)
+    # Color code the phase status rows (account for header row in table indexing)
+    phase_colors = [
+        ("#90EE90" if velocity_ok else "#FFB6C6", len(df1) - 2),
+        ("#90EE90" if (spall_ok and spall_uncertainty_ok) else "#FFB6C6", len(df1) - 1),
+        ("#90EE90" if hel_ok else "#FFB6C6", len(df1)),
+    ]
+    for color, row_idx in phase_colors:
+        table1[(row_idx, 0)].set_facecolor(color)
+        table1[(row_idx, 1)].set_facecolor(color)
 
     ax13.axis("tight")
     ax13.axis("off")
