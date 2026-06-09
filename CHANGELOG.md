@@ -7,13 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-06-09
+
+### Changed
+- Phase status display integrated into results table with color coding (velocity, spall & uncertainty, HEL)
+
 ## [1.7.0] - 2026-06-08
 
 ### Added
 - Velocity phase now computes and tracks uncertainty (`velocity_ok` flag)
   - Velocity thresholds now required in config and properly enforced
 - New shock analysis phase computing peak shock stress
-- Phase status display with color coding on main output figure
 - Enhanced config validation module with strict parameter checking and mode-based requirements
 - New incompatibility check: HEL detection incompatible with gaussian_notch filter
 
@@ -97,7 +101,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated spall signal analysis pipeline
 - Initial PyPI and Docker publishing workflows
 
-[Unreleased]: https://github.com/openmsi/ALPSS/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/openmsi/ALPSS/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/openmsi/ALPSS/compare/v1.7.0...v1.7.1
+[1.7.0]: https://github.com/openmsi/ALPSS/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/openmsi/ALPSS/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/openmsi/ALPSS/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/openmsi/ALPSS/compare/v1.3.2...v1.4.0
