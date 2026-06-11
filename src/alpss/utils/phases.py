@@ -64,7 +64,7 @@ def run_velocity_phase(**inputs) -> tuple:
         vel_out["iua_out"] = iua_out
 
         vu_out = velocity_uncertainty_analysis(vc_out, iua_out)
-        vc_out.update(vu_out)
+        vel_out["vu_out"] = vu_out
         logger.info("Velocity uncertainties computed")
 
         logger.info("Velocity processing complete")
@@ -220,6 +220,7 @@ def run_output_phase(
     cen,
     cf_out,
     vc_out,
+    vu_out,
     sa_out,
     iua_out,
     sua_out,
@@ -241,6 +242,7 @@ def run_output_phase(
         cen,
         cf_out,
         vc_out,
+        vu_out,
         sa_out,
         iua_out,
         sua_out,
@@ -283,6 +285,7 @@ def run_output_phase(
         sdf_out,
         cen,
         vc_out,
+        vu_out,
         sa_out,
         iua_out,
         sua_out,

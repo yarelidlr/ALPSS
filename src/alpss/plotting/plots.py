@@ -12,6 +12,7 @@ def plot_results(
     cen,
     cf_out,
     vc_out,
+    vu_out,
     sa_out,
     iua_out,
     fua_out,

@@ -36,6 +36,7 @@ def alpss_main(**inputs):
     cf_out = vel["cf_out"]
     vc_out = vel["vc_out"]
     iua_out = vel["iua_out"]
+    vu_out = vel["vu_out"]
     start_time = vel["start_time"]
     end_time = vel["end_time"]
 
@@ -74,6 +75,7 @@ def alpss_main(**inputs):
         cen,
         cf_out,
         vc_out,
+        vu_out,
         sa_out,
         iua_out,
         sua_out,
