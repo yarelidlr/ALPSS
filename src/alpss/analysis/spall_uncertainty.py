@@ -31,9 +31,9 @@ def spall_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs):
     delta_time_c = iua_out["tau"]
     delta_time_d = iua_out["tau"]
     freq_tb = (vc_out["v_max_comp"] * 2) / lam + cen
-    freq_td = (sa_out["v_max_ten"] * 2) / lam + cen
+    freq_td = (vc_out["v_max_ten"] * 2) / lam + cen
     time_c = vc_out["t_max_comp"]
-    time_d = sa_out["t_max_ten"]
+    time_d = vc_out["t_max_ten"]
 
     # assuming time c is the same as time b
     freq_tc = freq_tb

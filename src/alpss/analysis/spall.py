@@ -27,10 +27,6 @@ def spall_analysis(vc_out, iua_out, **inputs):
     spall_strength_est = 0.5 * density * C0 * pullback_velocity
 
     return {
-        "t_max_ten": t_max_ten,
-        "t_rc": t_rc,
-        "v_max_ten": v_max_ten,
-        "v_rc": v_rc,
         "spall_strength_est": spall_strength_est,
         "strain_rate_est": strain_rate_est,
         "max_ten_freq_uncert": max_ten_freq_uncert,
