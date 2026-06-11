@@ -129,6 +129,8 @@ def save(
         "Velocity at Max Compression Vel Uncertainty": vc_out["peak_velocity_vel_uncert"],
         "Velocity at Max Tension": vc_out["v_max_ten"],
         "Time at Max Tension": vc_out["t_max_ten"],
+        "Velocity at Max Tension Freq Uncertainty": vc_out["max_ten_freq_uncert"],
+        "Velocity at Max Tension Vel Uncertainty": vc_out["max_ten_vel_uncert"],
         "Velocity at Recompression": vc_out["v_rc"],
         "Time at Recompression": vc_out["t_rc"],
         "Carrier Frequency": cen,
@@ -143,8 +145,6 @@ def save(
     results_to_save.update({
         "Spall Enabled": inputs["spall_enabled"],
         "Spall OK": spall_ok,
-        "Velocity at Max Tension Freq Uncertainty": sa_out["max_ten_freq_uncert"],
-        "Velocity at Max Tension Vel Uncertainty": sa_out["max_ten_vel_uncert"],
         "Spall Strength": sa_out["spall_strength_est"],
         "Strain Rate": sa_out["strain_rate_est"],
     })

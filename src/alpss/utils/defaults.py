@@ -4,7 +4,6 @@ import numpy as np
 def default_spall_output() -> dict:
     return {
         "spall_strength_est": np.nan, "strain_rate_est": np.nan,
-        "max_ten_freq_uncert": np.nan, "max_ten_vel_uncert": np.nan,
     }
 
 

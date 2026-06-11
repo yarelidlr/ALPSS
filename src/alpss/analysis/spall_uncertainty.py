@@ -27,7 +27,7 @@ def spall_uncertainty_analysis(cen, vc_out, sa_out, iua_out, **inputs):
     theta = inputs["theta"]
     delta_theta = inputs["delta_theta"]
     delta_freq_tb = vc_out["peak_velocity_freq_uncert"]
-    delta_freq_td = sa_out["max_ten_freq_uncert"]
+    delta_freq_td = vc_out["max_ten_freq_uncert"]
     delta_time_c = iua_out["tau"]
     delta_time_d = iua_out["tau"]
     freq_tb = (vc_out["v_max_comp"] * 2) / lam + cen
