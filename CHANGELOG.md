@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
-### Added
+### Added 
 - Impedance-matching module (`alpss.analysis.impedance`): `particle_velocity()`
   computes interface particle velocity from flyer velocity and material
   properties for symmetric and mismatched-impedance impacts.
