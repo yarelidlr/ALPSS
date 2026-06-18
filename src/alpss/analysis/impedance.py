@@ -7,7 +7,7 @@ class Material:
  
     density : starting density, in kg/m^3
     C0      : bulk sound speed, in m/s
-    S       : Hugoniot slope (just a plain number, no units)
+    S       : Hugoniot slope (no units)
     name    : an optional label like "Copper", only used for printing
     """
  
