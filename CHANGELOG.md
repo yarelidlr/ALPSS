@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.8.0] - 2026-06-17
+
 
 ### Added
 - Impedance-matching module (`alpss.analysis.impedance`): `particle_velocity()`
