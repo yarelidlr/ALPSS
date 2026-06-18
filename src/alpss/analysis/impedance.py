@@ -1,150 +1,104 @@
 
-from __future__ import annotations
- 
-from dataclasses import dataclass
-import logging
- 
-import numpy as np
- 
-logger = logging.getLogger("alpss")
- 
-__all__ = ["Material", "particle_velocity", "check_case1"]
+import math
  
  
-@dataclass(frozen=True)
 class Material:
-
+    """Holds the three shock properties of one material.
  
-    density: float
-    C0: float
-    S: float
-    name: str = ""
-    C_L: float | None = None
+    density : starting density, in kg/m^3
+    C0      : bulk sound speed, in m/s
+    S       : Hugoniot slope (just a plain number, no units)
+    name    : an optional label like "Copper", only used for printing
+    """
  
-    def __post_init__(self) -> None:
-        if self.density <= 0:
-            raise ValueError(f"density must be > 0, got {self.density}")
-        if self.C0 <= 0:
-            raise ValueError(f"C0 must be > 0, got {self.C0}")
-        if self.S < 0:
-            # Physically S is almost always >= 0; warn rather than hard-fail.
-            logger.warning("Material %r has negative Hugoniot slope S=%s",
-                           self.name or "<unnamed>", self.S)
- 
-    @property
-    def shock_impedance(self) -> float:
-        """Acoustic (weak-shock) impedance ``Z0 = rho0 * C0`` [kg m^-2 s^-1]."""
-        return self.density * self.C0
- 
-    def shock_velocity(self, u_p):
-        """Shock velocity ``U_s = C0 + S*u_p`` for particle velocity ``u_p``."""
-        return self.C0 + self.S * np.asarray(u_p, dtype=float)
- 
-    def impedance_at(self, u_p):
-        """Finite-amplitude impedance ``rho0 * U_s(u_p)`` at particle velocity ``u_p``."""
-        return self.density * self.shock_velocity(u_p)
- 
-    @classmethod
-    def from_config(cls, inputs: dict, *, prefix: str = "") -> "Material":
-  
-        return cls(
-            density=float(inputs[f"{prefix}density"]),
-            C0=float(inputs[f"{prefix}C0"]),
-            S=float(inputs.get(f"{prefix}S", 0.0)),
-            name=str(inputs.get(f"{prefix}material_name", "")),
-            C_L=inputs.get(f"{prefix}C_L"),
-        )
+    def __init__(self, density, C0, S, name=""):
+        if density <= 0:
+            raise ValueError("density must be a positive number")
+        if C0 <= 0:
+            raise ValueError("C0 must be a positive number")
+        self.density = density
+        self.C0 = C0
+        self.S = S
+        self.name = name
  
  
-def check_case1(flyer: Material, target: Material | None = None,
-                *, rtol: float = 1e-9) -> bool:
+def check_case1(flyer, target):
+    """Return True if the flyer and the sample are the same material.
  
+    "Case 1" is the simple case: same material on both sides, so the flyer
+    velocity splits exactly in half (u_p = V / 2) and we don't need the
+    quadratic formula.
+ 
+    If target is None treat it as "same material as the flyer", which is
+    also Case 1.
+    """
     if target is None:
         return True
-    return bool(
-        np.isclose(flyer.density, target.density, rtol=rtol)
-        and np.isclose(flyer.C0, target.C0, rtol=rtol)
-        and np.isclose(flyer.S, target.S, rtol=rtol)
-    )
+ 
+    # two numbers are "the same" if their difference is tiny
+    tiny = 0.000001  # 1e-6
+    same_density = abs(flyer.density - target.density) < tiny
+    same_C0 = abs(flyer.C0 - target.C0) < tiny
+    same_S = abs(flyer.S - target.S) < tiny
+ 
+    return same_density and same_C0 and same_S
  
  
-def _select_physical_root(a, b, c, V):
-
-    a = np.asarray(a, dtype=float)
-    b = np.asarray(b, dtype=float)
-    c = np.asarray(c, dtype=float)
-    V = np.asarray(V, dtype=float)
+def particle_velocity(flyer_velocity, flyer, target=None):
+    """Return the particle velocity u_p at the flyer/sample interface.
  
-    # --- linear branch (a ~ 0): symmetric / matched impedance ---------------
-    # Use a relative threshold so units don't matter.
-    scale = np.maximum(np.abs(b), 1.0)
-    linear = np.abs(a) <= 1e-12 * scale
+    Inputs
+    ------
+    flyer_velocity : the impact speed V of the flyer, in m/s (a single number,
+                     must be 0 or positive)
+    flyer          : a Material describing the flyer
+    target         : a Material describing the sample. If you leave this out
+                     (or pass None), the sample is assumed to be the SAME
+                     material as the flyer.
  
-    with np.errstate(divide="ignore", invalid="ignore"):
-        u_linear = np.where(b != 0.0, -c / b, 0.0)
+    Output
+    ------
+    u_p : the particle velocity in m/s (a single number).
  
-        # --- quadratic branch ---------------------------------------------
-        disc = b * b - 4.0 * a * c
-        disc = np.where(disc < 0.0, np.nan, disc)
-        sqrt_disc = np.sqrt(disc)
-        a_safe = np.where(linear, np.nan, a)  # avoid 0-division warnings
-        root_plus = (-b + sqrt_disc) / (2.0 * a_safe)
-        root_minus = (-b - sqrt_disc) / (2.0 * a_safe)
+    Example
+    -------
+    >>> copper = Material(8930, 3940, 1.489, name="Copper")
+    >>> particle_velocity(1000, copper)          # same material -> half
+    500.0
+    """
+    V = flyer_velocity
  
-    # Tolerance band for "inside [0, V]".
-    tol = 1e-9 * np.maximum(np.abs(V), 1.0)
+    if V < 0:
+        raise ValueError("flyer_velocity must be 0 or positive")
  
-    def _in_range(r):
-        return (r >= -tol) & (r <= V + tol)
- 
-    plus_ok = _in_range(root_plus)
-    # Prefer root_plus when valid, else root_minus, else NaN.
-    u_quad = np.where(plus_ok, root_plus, root_minus)
-    quad_valid = plus_ok | _in_range(root_minus)
-    u_quad = np.where(quad_valid, u_quad, np.nan)
- 
-    u_p = np.where(linear, u_linear, u_quad)
- 
-    # Clip tiny numerical excursions back into the physical band.
-    u_p = np.clip(u_p, 0.0, V)
-    return u_p
- 
- 
-def particle_velocity(flyer_velocity, flyer: Material,
-                      target: Material | None = None,
-                      *, return_pressure: bool = False):
-
-    V = np.asarray(flyer_velocity, dtype=float)
-    scalar_input = V.ndim == 0
- 
-    if np.any(V < 0):
-        raise ValueError("flyer_velocity must be >= 0 (impact speed).")
- 
-    # --- symmetric / Case-1 shortcut ---------------------------------------
+    # ---- Case 1: same material on both sides -> exactly half ----
     if check_case1(flyer, target):
-        u_p = 0.5 * V
-        mat = flyer
+        return V / 2
+ 
+    # ---- Different materials: solve a*u_p^2 + b*u_p + c = 0 ----
+    # These three lines ARE the impedance-matching equation. They come from
+    # setting the flyer's pressure equal to the sample's pressure at the
+    # interface and gathering the u_p terms together.
+    a = target.density * target.S - flyer.density * flyer.S
+    b = (target.density * target.C0
+         + flyer.density * flyer.C0
+         + 2 * flyer.density * flyer.S * V)
+    c = -flyer.density * V * (flyer.C0 + flyer.S * V)
+ 
+    # If a is essentially zero, the u_p^2 term disappears and the equation is
+    # just a straight line:  b*u_p + c = 0  ->  u_p = -c / b
+    if abs(a) < 1e-12:
+        return -c / b
+ 
+    # Otherwise use the quadratic formula. A quadratic has two answers
+    # (root1 and root2), and keep the one that makes sense
+    discriminant = b * b - 4 * a * c
+    root1 = (-b + math.sqrt(discriminant)) / (2 * a)
+    root2 = (-b - math.sqrt(discriminant)) / (2 * a)
+ 
+    # The particle velocity must be between 0 and the impact speed V. Pick the
+    # root that lands in that range.
+    if 0 <= root1 <= V:
+        return root1
     else:
-        a = target.density * target.S - flyer.density * flyer.S
-        b = (target.density * target.C0
-             + flyer.density * flyer.C0
-             + 2.0 * flyer.density * flyer.S * V)
-        c = -flyer.density * V * (flyer.C0 + flyer.S * V)
-        u_p = _select_physical_root(a, b, c, V)
-        mat = target
- 
-        if np.any(np.isnan(u_p)):
-            raise ValueError(
-                "No physical impedance-matching root in [0, V]; check the "
-                "material properties and impact velocity."
-            )
- 
-    if return_pressure:
-        # Stress on the *target* (or flyer, in the symmetric case) Hugoniot.
-        pressure = mat.density * mat.shock_velocity(u_p) * u_p
-        if scalar_input:
-            return float(u_p), float(pressure)
-        return u_p, pressure
- 
-    return float(u_p) if scalar_input else u_p
- 
+        return root2
