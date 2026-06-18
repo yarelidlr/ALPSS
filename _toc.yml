@@ -12,3 +12,5 @@ chapters:
   title: Platform Integration
 - file: docs/changelog
   title: Changelog
+- file: docs/impedance_matching
+      title: Impedance Matching
